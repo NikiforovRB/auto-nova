@@ -17,39 +17,104 @@ export function AdDetailsPage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!id) return
+    if (!id) {
+      setLoading(false)
+      setErrorMessage('Некорректный идентификатор объявления.')
+      return
+    }
     const adId = Number(id)
-    if (Number.isNaN(adId)) return
+    if (Number.isNaN(adId)) {
+      setLoading(false)
+      setErrorMessage('Некорректный идентификатор объявления.')
+      return
+    }
 
     const load = async () => {
-      const { data, error } = await supabase
+      setLoading(true)
+      setErrorMessage(null)
+      const { data: adDataWithProfile, error: adErrorWithProfile } = await supabase
         .from('ads')
         .select(
           `
           *,
           brand:brands(*),
           model:models(*),
-          photos:ad_photos(*),
           profile:profiles(phone)
         `,
         )
         .eq('id', adId)
-        .single()
+        .maybeSingle()
 
-      if (!error && data) {
-        setAd(data as unknown as Ad)
-        const ordered =
-          (data as any).photos?.sort(
-            (a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0),
-          ) ?? []
+      let adRow: unknown | null = null
+
+      if (adErrorWithProfile) {
+        console.error('Failed to load ad details with profile', adErrorWithProfile)
+
+        // Если проблема именно с профилем (RLS / права), пробуем без профиля
+        const { data: adDataFallback, error: adErrorFallback } = await supabase
+          .from('ads')
+          .select(
+            `
+            *,
+            brand:brands(*),
+            model:models(*)
+          `,
+          )
+          .eq('id', adId)
+          .maybeSingle()
+
+        if (adErrorFallback) {
+          console.error('Failed to load ad details (fallback)', adErrorFallback)
+          setErrorMessage(
+            adErrorFallback.code === 'PGRST116'
+              ? 'Объявление не найдено или недоступно.'
+              : 'Не удалось загрузить объявление. Попробуйте обновить страницу.',
+          )
+          setAd(null)
+          setPhotos(['https://via.placeholder.com/800x480?text=AUTONOVA'])
+          setLoading(false)
+          return
+        }
+
+        adRow = adDataFallback
+      } else {
+        adRow = adDataWithProfile
+      }
+
+      if (!adRow) {
+        setErrorMessage('Объявление не найдено или недоступно.')
+        setAd(null)
+        setPhotos(['https://via.placeholder.com/800x480?text=AUTONOVA'])
+        setLoading(false)
+        return
+      }
+
+      setAd(adRow as Ad)
+
+      const { data: photosData, error: photosError } = await supabase
+        .from('ad_photos')
+        .select('*')
+        .eq('ad_id', adId)
+        .order('order_index', { ascending: true })
+
+      if (photosError) {
+        console.error('Failed to load ad photos', photosError)
+        setPhotos(['https://via.placeholder.com/800x480?text=AUTONOVA'])
+      } else {
+        const urls =
+          (photosData ?? []).map((p) => (p as { url: string }).url) ??
+          []
         setPhotos(
-          ordered.length
-            ? ordered.map((p: any) => p.url as string)
+          urls.length
+            ? urls
             : ['https://via.placeholder.com/800x480?text=AUTONOVA'],
         )
       }
+      setLoading(false)
     }
 
     void load()
@@ -81,12 +146,25 @@ export function AdDetailsPage() {
     [ad],
   )
 
-  if (!ad) {
+  if (loading) {
     return (
       <MainLayout>
         <Header />
         <main className="ad-details-main">
           <section className="ad-details-card">Загрузка объявления…</section>
+        </main>
+      </MainLayout>
+    )
+  }
+
+  if (!ad) {
+    return (
+      <MainLayout>
+        <Header />
+        <main className="ad-details-main">
+          <section className="ad-details-card">
+            {errorMessage ?? 'Объявление не найдено.'}
+          </section>
         </main>
       </MainLayout>
     )

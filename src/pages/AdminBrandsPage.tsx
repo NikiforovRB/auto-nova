@@ -192,10 +192,20 @@ export function AdminBrandsPage() {
   }
 
   const persistBrandOrder = async (ordered: Brand[]) => {
-    const updates = ordered.map((b, idx) => ({ id: b.id, sort_order: idx }))
-    const { error } = await supabase.from('brands').upsert(updates, { onConflict: 'id' })
-    if (error) {
-      toast.push({ variant: 'error', title: 'Не удалось сохранить порядок', message: error.message })
+    for (let idx = 0; idx < ordered.length; idx += 1) {
+      const b = ordered[idx]
+      const { error } = await supabase
+        .from('brands')
+        .update({ sort_order: idx })
+        .eq('id', b.id)
+      if (error) {
+        toast.push({
+          variant: 'error',
+          title: 'Не удалось сохранить порядок',
+          message: error.message,
+        })
+        break
+      }
     }
   }
 
@@ -251,10 +261,20 @@ export function AdminBrandsPage() {
   }
 
   const persistModelOrder = async (_brandId: number, orderedModels: Model[]) => {
-    const updates = orderedModels.map((m, idx) => ({ id: m.id, sort_order: idx }))
-    const { error } = await supabase.from('models').upsert(updates, { onConflict: 'id' })
-    if (error) {
-      toast.push({ variant: 'error', title: 'Не удалось сохранить порядок моделей', message: error.message })
+    for (let idx = 0; idx < orderedModels.length; idx += 1) {
+      const m = orderedModels[idx]
+      const { error } = await supabase
+        .from('models')
+        .update({ sort_order: idx })
+        .eq('id', m.id)
+      if (error) {
+        toast.push({
+          variant: 'error',
+          title: 'Не удалось сохранить порядок моделей',
+          message: error.message,
+        })
+        break
+      }
     }
   }
 
@@ -327,10 +347,20 @@ export function AdminBrandsPage() {
   }
 
   const persistGenerationOrder = async (_modelId: number, ordered: ModelGeneration[]) => {
-    const updates = ordered.map((g, idx) => ({ id: g.id, sort_order: idx }))
-    const { error } = await supabase.from('model_generations').upsert(updates, { onConflict: 'id' })
-    if (error) {
-      toast.push({ variant: 'error', title: 'Не удалось сохранить порядок поколений', message: error.message })
+    for (let idx = 0; idx < ordered.length; idx += 1) {
+      const g = ordered[idx]
+      const { error } = await supabase
+        .from('model_generations')
+        .update({ sort_order: idx })
+        .eq('id', g.id)
+      if (error) {
+        toast.push({
+          variant: 'error',
+          title: 'Не удалось сохранить порядок поколений',
+          message: error.message,
+        })
+        break
+      }
     }
   }
 
