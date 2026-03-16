@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="autonova-grad" x1="0" y1="48" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0c78ed" />
+      <stop offset="1" stop-color="#3ba3ff" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#autonova-grad)" />
+  <path
+    d="M16 30.5 21.2 15h5.6L32 30.5h-3.9l-1-3.4h-5.8l-1 3.4H16Zm6.1-6.7h3.8L24 18.4l-1.9 5.4Z"
+    fill="#ffffff"
+  />
+  <path
+    d="M33.8 18.2c0-1.1.8-1.9 1.9-1.9s1.9.8 1.9 1.9-.8 1.9-1.9 1.9-1.9-.8-1.9-1.9Z"
+    fill="#ffffff"
+    fill-opacity="0.9"
+  />
+</svg>
