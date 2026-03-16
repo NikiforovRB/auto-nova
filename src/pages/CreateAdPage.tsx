@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'

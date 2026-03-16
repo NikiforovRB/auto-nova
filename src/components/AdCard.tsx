@@ -1,4 +1,5 @@
-import { MouseEvent, useMemo, useState } from 'react'
+import type { MouseEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Ad } from '../types'
 import { useAuth } from '../auth/AuthContext'

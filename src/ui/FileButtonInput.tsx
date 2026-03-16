@@ -2,7 +2,9 @@ import { useId, useRef } from 'react'
 
 interface FileButtonInputProps {
   accept?: string
-  onFileSelected: (file: File | null) => void
+  multiple?: boolean
+  onFileSelected?: (file: File | null) => void
+  onFilesSelected?: (files: FileList | null) => void
   buttonText?: string
   selectedFileName?: string | null
   disabled?: boolean
@@ -10,7 +12,9 @@ interface FileButtonInputProps {
 
 export function FileButtonInput({
   accept,
+  multiple,
   onFileSelected,
+  onFilesSelected,
   buttonText = 'Выбрать фото',
   selectedFileName,
   disabled,
@@ -26,8 +30,13 @@ export function FileButtonInput({
         className="file-input-hidden"
         type="file"
         accept={accept}
+        multiple={multiple}
         disabled={disabled}
-        onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          const files = e.target.files
+          if (onFilesSelected) onFilesSelected(files ?? null)
+          if (onFileSelected) onFileSelected(files?.[0] ?? null)
+        }}
       />
       <button
         type="button"

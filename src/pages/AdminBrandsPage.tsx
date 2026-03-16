@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
 import { supabase } from '../supabaseClient'
@@ -249,7 +250,7 @@ export function AdminBrandsPage() {
     toast.push({ variant: 'success', title: 'Модель добавлена', message: modelName })
   }
 
-  const persistModelOrder = async (brandId: number, orderedModels: Model[]) => {
+  const persistModelOrder = async (_brandId: number, orderedModels: Model[]) => {
     const updates = orderedModels.map((m, idx) => ({ id: m.id, sort_order: idx }))
     const { error } = await supabase.from('models').upsert(updates, { onConflict: 'id' })
     if (error) {
@@ -325,7 +326,7 @@ export function AdminBrandsPage() {
     toast.push({ variant: 'success', title: 'Поколение удалено', message: g.title })
   }
 
-  const persistGenerationOrder = async (modelId: number, ordered: ModelGeneration[]) => {
+  const persistGenerationOrder = async (_modelId: number, ordered: ModelGeneration[]) => {
     const updates = ordered.map((g, idx) => ({ id: g.id, sort_order: idx }))
     const { error } = await supabase.from('model_generations').upsert(updates, { onConflict: 'id' })
     if (error) {

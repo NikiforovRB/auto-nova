@@ -151,9 +151,9 @@ body {
 }
 
 .region-select-wrapper {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f9fafb;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   display: inline-flex;
   align-items: center;
   gap: 6px;

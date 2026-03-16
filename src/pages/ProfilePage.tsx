@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
 import { useAuth } from '../auth/AuthContext'

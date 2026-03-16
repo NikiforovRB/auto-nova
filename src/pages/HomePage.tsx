@@ -11,7 +11,7 @@ export function HomePage() {
   const [brands, setBrands] = useState<Brand[]>([])
   const [ads, setAds] = useState<Ad[]>([])
   const [favorites, setFavorites] = useState<number[]>([])
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null)
+  const [selectedBrandId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
   const navigate = useNavigate()
