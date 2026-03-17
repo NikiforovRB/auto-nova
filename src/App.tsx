@@ -20,6 +20,7 @@ import { AdminRegionsPage } from './pages/AdminRegionsPage'
 import { AdminDocsPage } from './pages/AdminDocsPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { EditAdPage } from './pages/EditAdPage'
+import { MyAdsPage } from './pages/MyAdsPage'
 
 export function App() {
   return (
@@ -33,6 +34,7 @@ export function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/ads" element={<MyAdsPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/personal-data" element={<PersonalDataPolicyPage />} />

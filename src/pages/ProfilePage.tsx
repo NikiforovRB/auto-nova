@@ -115,6 +115,8 @@ export function ProfilePage() {
     )
   }
 
+  const previewAds = ads.slice(0, 10)
+
   return (
     <MainLayout>
       <Header />
@@ -234,7 +236,7 @@ export function ProfilePage() {
           <h2 className="profile-title">Мои объявления</h2>
           {ads.length ? (
             <ul className="admin-list">
-              {ads.map((ad) => {
+              {previewAds.map((ad) => {
                 const firstPhoto =
                   (ad.photos ?? [])
                     .slice()
@@ -267,6 +269,19 @@ export function ProfilePage() {
                 Разместить объявление
               </button>
             </div>
+          )}
+
+          {ads.length > 10 ? (
+            <button
+              type="button"
+              className="primary-button"
+              style={{ marginTop: 12 }}
+              onClick={() => navigate('/profile/ads')}
+            >
+              Показать все объявления
+            </button>
+          ) : (
+            null
           )}
         </section>
         </div>
