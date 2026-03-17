@@ -55,6 +55,7 @@ export interface Ad {
 export interface Region {
   id: number
   name: string
+  sort_order?: number | null
 }
 
 export interface Profile {

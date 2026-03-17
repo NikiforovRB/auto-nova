@@ -6,15 +6,17 @@ import { supabase } from '../supabaseClient'
 import type { Ad, Brand } from '../types'
 import { useAuth } from '../auth/AuthContext'
 import { AdCard } from '../components/AdCard'
+import { useFavorites } from '../favorites/FavoritesContext'
 
 export function BrandPage() {
   const { id } = useParams()
   const brandId = id ? Number(id) : NaN
   const [brand, setBrand] = useState<Brand | null>(null)
   const [ads, setAds] = useState<Ad[]>([])
-  const [favorites, setFavorites] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
-  const { user } = useAuth()
+  useAuth()
+  // keep hook to ensure favorites are loaded for header/card
+  useFavorites()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export function BrandPage() {
       const [{ data: brandData }, { data: adsData }] = await Promise.all([
         supabase.from('brands').select('*').eq('id', brandId).single(),
         supabase
-          .from('ads')
+          .from('listings')
           .select(
             `
             *,
@@ -50,28 +52,7 @@ export function BrandPage() {
     void load()
   }, [brandId, navigate])
 
-  useEffect(() => {
-    if (!user) {
-      setFavorites([])
-      return
-    }
-
-    const loadFavorites = async () => {
-      const { data } = await supabase
-        .from('favorites')
-        .select('ad_id')
-        .eq('user_id', user.id)
-      setFavorites((data ?? []).map((row) => row.ad_id as number))
-    }
-
-    void loadFavorites()
-  }, [user])
-
   const title = useMemo(() => (brand?.name ? `Купить ${brand.name}` : 'Купить'), [brand?.name])
-
-  const handleFavoriteChange = (adId: number, next: boolean) => {
-    setFavorites((prev) => (next ? [...prev, adId] : prev.filter((x) => x !== adId)))
-  }
 
   return (
     <MainLayout>
@@ -101,8 +82,6 @@ export function BrandPage() {
                 <AdCard
                   key={ad.id}
                   ad={ad}
-                  isFavorite={favorites.includes(ad.id)}
-                  onFavoriteChange={handleFavoriteChange}
                 />
               ))}
             </div>

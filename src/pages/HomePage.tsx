@@ -6,14 +6,16 @@ import { supabase } from '../supabaseClient'
 import type { Ad, Brand } from '../types'
 import { useAuth } from '../auth/AuthContext'
 import { AdCard } from '../components/AdCard'
+import { useFavorites } from '../favorites/FavoritesContext'
 
 export function HomePage() {
   const [brands, setBrands] = useState<Brand[]>([])
   const [ads, setAds] = useState<Ad[]>([])
-  const [favorites, setFavorites] = useState<number[]>([])
   const [selectedBrandId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-  const { user } = useAuth()
+  useAuth()
+  // keep hook to ensure favorites are loaded for header/card
+  useFavorites()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export function HomePage() {
       const [{ data: brandsData }, { data: adsData }] = await Promise.all([
         supabase.from('brands').select('*').order('sort_order', { ascending: true }).order('name'),
         supabase
-          .from('ads')
+          .from('listings')
           .select(
             `
             *,
@@ -44,33 +46,10 @@ export function HomePage() {
     void load()
   }, [])
 
-  useEffect(() => {
-    if (!user) {
-      setFavorites([])
-      return
-    }
-
-    const loadFavorites = async () => {
-      const { data } = await supabase
-        .from('favorites')
-        .select('ad_id')
-        .eq('user_id', user.id)
-      setFavorites((data ?? []).map((row) => row.ad_id as number))
-    }
-
-    void loadFavorites()
-  }, [user])
-
   const filteredAds = useMemo(
     () => (selectedBrandId ? ads.filter((ad) => ad.brand_id === selectedBrandId) : ads),
     [ads, selectedBrandId],
   )
-
-  const handleFavoriteChange = (adId: number, next: boolean) => {
-    setFavorites((prev) =>
-      next ? [...prev, adId] : prev.filter((id) => id !== adId),
-    )
-  }
 
   return (
     <MainLayout>
@@ -80,7 +59,7 @@ export function HomePage() {
           <div className="hero-text">
             <h1 className="hero-title">Площадка для покупки и продажи автомобилей</h1>
             <p className="hero-subtitle">
-              AUTONOVA — удобный сервис для поиска, продажи и покупки автомобилей по всей России.
+              AUTONOVA — удобный сервис для поиска, продажи и покупки автомобилей.
             </p>
           </div>
         </section>
@@ -128,8 +107,6 @@ export function HomePage() {
                 <AdCard
                   key={ad.id}
                   ad={ad}
-                  isFavorite={favorites.includes(ad.id)}
-                  onFavoriteChange={handleFavoriteChange}
                 />
               ))}
             </div>

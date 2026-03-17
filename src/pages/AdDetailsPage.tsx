@@ -17,6 +17,7 @@ export function AdDetailsPage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -146,6 +147,17 @@ export function AdDetailsPage() {
     [ad],
   )
 
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false)
+      if (e.key === 'ArrowLeft') setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length)
+      if (e.key === 'ArrowRight') setActiveIndex((prev) => (prev + 1) % photos.length)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [lightboxOpen, photos.length])
+
   if (loading) {
     return (
       <MainLayout>
@@ -175,28 +187,37 @@ export function AdDetailsPage() {
       <Header />
       <main className="ad-details-main">
         <section className="ad-details-card">
-          <div className="ad-details-gallery">
-            <img
-              src={photos[activeIndex]}
-              alt=""
-              className="ad-details-photo"
-            />
-            {photos.length > 1 && (
-              <div className="ad-details-thumbs">
-                {photos.map((url, idx) => (
-                  <button
-                    key={url}
-                    type="button"
-                    className={`thumb ${idx === activeIndex ? 'is-active' : ''}`}
-                    onClick={() => setActiveIndex(idx)}
-                  >
-                    <img src={url} alt="" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="ad-details-info">
+          <div className="ad-details-top">
+            <div className="ad-details-gallery">
+              <button
+                type="button"
+                className="ad-details-photo-button"
+                onClick={() => setLightboxOpen(true)}
+                aria-label="Открыть фото на весь экран"
+              >
+                <img
+                  src={photos[activeIndex]}
+                  alt=""
+                  className="ad-details-photo"
+                />
+              </button>
+              {photos.length > 1 && (
+                <div className="ad-details-thumbs">
+                  {photos.map((url, idx) => (
+                    <button
+                      key={url}
+                      type="button"
+                      className={`thumb ${idx === activeIndex ? 'is-active' : ''}`}
+                      onClick={() => setActiveIndex(idx)}
+                    >
+                      <img src={url} alt="" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="ad-details-info">
             <h1 className="ad-details-title">
               {ad.brand?.name} {ad.model?.name}
             </h1>
@@ -207,9 +228,6 @@ export function AdDetailsPage() {
               </span>
               {ad.city && <span>{ad.city}</span>}
             </div>
-            {ad.description && (
-              <p className="ad-details-description">{ad.description}</p>
-            )}
             <div className="ad-details-contacts">
               <h2>Контакты</h2>
               <button
@@ -222,11 +240,52 @@ export function AdDetailsPage() {
                   : 'Показать телефон'}
               </button>
             </div>
-            <div className="ad-details-created">
-              Объявление размещено: {createdAtMoscow} (МСК)
             </div>
           </div>
+
+          {ad.description ? (
+            <div className="ad-details-description">{ad.description}</div>
+          ) : null}
+          <div className="ad-details-created">
+            Объявление размещено: {createdAtMoscow} (МСК)
+          </div>
         </section>
+
+        {lightboxOpen ? (
+          <div
+            className="lightbox"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Закрыть">
+                ✕
+              </button>
+              {photos.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    className="lightbox-nav lightbox-prev"
+                    onClick={() => setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length)}
+                    aria-label="Предыдущее фото"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="lightbox-nav lightbox-next"
+                    onClick={() => setActiveIndex((prev) => (prev + 1) % photos.length)}
+                    aria-label="Следующее фото"
+                  >
+                    ›
+                  </button>
+                </>
+              ) : null}
+              <img src={photos[activeIndex]} alt="" className="lightbox-photo" />
+            </div>
+          </div>
+        ) : null}
       </main>
     </MainLayout>
   )

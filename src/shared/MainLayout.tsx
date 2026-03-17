@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Footer } from './Footer'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -7,7 +8,10 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="app-root">
-      <div className="app-shell">{children}</div>
+      <div className="app-shell">
+        {children}
+        <Footer />
+      </div>
     </div>
   )
 }

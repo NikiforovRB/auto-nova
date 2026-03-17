@@ -8,6 +8,22 @@ import { supabase } from '../supabaseClient'
 import type { Brand, Model, ModelGeneration, Region } from '../types'
 import { uploadImageToS3 } from '../s3Upload'
 import { FileButtonInput } from '../ui/FileButtonInput'
+import addIcon from '../assets/add.svg'
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 export function CreateAdPage() {
   const { user } = useAuth()
@@ -20,15 +36,16 @@ export function CreateAdPage() {
   const [modelId, setModelId] = useState<number | null>(null)
   const [generationId, setGenerationId] = useState<number | null>(null)
   const [regionId, setRegionId] = useState<number | null>(null)
-  const [city, setCity] = useState('')
   const [priceDigits, setPriceDigits] = useState('')
   const [year, setYear] = useState('')
-  const [mileage, setMileage] = useState('')
+  const [mileageDigits, setMileageDigits] = useState('')
   const [description, setDescription] = useState('')
   const [photos, setPhotos] = useState<
     { id: string; file: File; previewUrl: string; rotation: number }[]
   >([])
   const [saving, setSaving] = useState(false)
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
   useEffect(() => {
     if (!user) {
@@ -64,9 +81,14 @@ export function CreateAdPage() {
     setPriceDigits(digits)
   }
 
+  const handleMileageChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, '')
+    setMileageDigits(digits)
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!user || !brandId || !modelId || !priceDigits || !year || !mileage) return
+    if (!user || !brandId || !modelId || !priceDigits || !year || !mileageDigits) return
     setSaving(true)
 
     const { data, error } = await supabase
@@ -77,10 +99,9 @@ export function CreateAdPage() {
         model_id: modelId,
         price: Number(priceDigits),
         year: Number(year),
-        mileage: Number(mileage),
+        mileage: Number(mileageDigits),
         generation_id: generationId,
         region_id: regionId,
-        city: city || null,
         description: description || null,
         status: 'active',
       })
@@ -118,6 +139,11 @@ export function CreateAdPage() {
     priceDigits === ''
       ? ''
       : Number(priceDigits).toLocaleString('ru-RU')
+
+  const formattedMileage =
+    mileageDigits === ''
+      ? ''
+      : Number(mileageDigits).toLocaleString('ru-RU')
 
   const handlePhotosSelected = (files: FileList | null) => {
     if (!files || !files.length) return
@@ -157,11 +183,35 @@ export function CreateAdPage() {
     })
   }
 
+  const onPhotosDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setPhotos((prev) => {
+      const oldIndex = prev.findIndex((p) => p.id === active.id)
+      const newIndex = prev.findIndex((p) => p.id === over.id)
+      return arrayMove(prev, oldIndex, newIndex)
+    })
+  }
+
+  function SortablePhoto({ id, children }: { id: string; children: React.ReactNode }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+    const style: React.CSSProperties = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.7 : 1,
+    }
+    return (
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        {children}
+      </div>
+    )
+  }
+
   return (
     <MainLayout>
       <Header />
       <main className="profile-main">
-        <section className="profile-card">
+        <section className="profile-card create-ad-card">
           <h1 className="profile-title">Новое объявление</h1>
           <form className="profile-form create-ad-form" onSubmit={handleSubmit}>
             <div className="create-ad-grid">
@@ -236,17 +286,6 @@ export function CreateAdPage() {
               )}
 
               <label className="profile-field">
-              <span className="label">Цена, ₽</span>
-              <input
-                type="text"
-                required
-                inputMode="numeric"
-                value={formattedPrice}
-                onChange={(e) => handlePriceChange(e.target.value)}
-              />
-            </label>
-
-              <label className="profile-field">
               <span className="label">Год выпуска</span>
               <input
                 type="number"
@@ -259,10 +298,22 @@ export function CreateAdPage() {
               <label className="profile-field">
               <span className="label">Пробег, км</span>
               <input
-                type="number"
+                type="text"
                 required
-                value={mileage}
-                onChange={(e) => setMileage(e.target.value)}
+                inputMode="numeric"
+                value={formattedMileage}
+                onChange={(e) => handleMileageChange(e.target.value)}
+              />
+            </label>
+
+              <label className="profile-field">
+              <span className="label">Цена, ₽</span>
+              <input
+                type="text"
+                required
+                inputMode="numeric"
+                value={formattedPrice}
+                onChange={(e) => handlePriceChange(e.target.value)}
               />
             </label>
 
@@ -283,16 +334,7 @@ export function CreateAdPage() {
               </select>
             </label>
 
-              <label className="profile-field">
-              <span className="label">Город</span>
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </label>
-
-              <label className="profile-field">
+              <label className="profile-field create-ad-desc">
               <span className="label">Описание</span>
               <textarea
                 value={description}
@@ -310,9 +352,12 @@ export function CreateAdPage() {
                 onFilesSelected={handlePhotosSelected}
               />
               {photos.length > 0 && (
-                <div className="create-ad-photos-grid">
-                  {photos.map((photo, index) => (
-                    <div key={photo.id} className="create-ad-photo-item">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onPhotosDragEnd}>
+                  <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
+                    <div className="create-ad-photos-grid">
+                      {photos.map((photo, index) => (
+                        <SortablePhoto key={photo.id} id={photo.id}>
+                          <div className="create-ad-photo-item">
                       <div className="create-ad-photo-preview-wrapper">
                         <img
                           src={photo.previewUrl}
@@ -353,13 +398,17 @@ export function CreateAdPage() {
                           ✕
                         </button>
                       </div>
+                          </div>
+                        </SortablePhoto>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
 
-            <button type="submit" className="primary-button" disabled={saving}>
+            <button type="submit" className="primary-button create-ad-submit" disabled={saving}>
+              <img src={addIcon} alt="" className="create-ad-submit-icon" aria-hidden="true" />
               {saving ? 'Сохраняем…' : 'Разместить объявление'}
             </button>
           </form>

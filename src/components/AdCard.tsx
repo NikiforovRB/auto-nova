@@ -3,19 +3,23 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Ad } from '../types'
 import { useAuth } from '../auth/AuthContext'
-import { supabase } from '../supabaseClient'
+import { useFavorites } from '../favorites/FavoritesContext'
+import likeIcon from '../assets/like.svg'
+import likeHoverIcon from '../assets/like-nav.svg'
+import likeActiveIcon from '../assets/like-active.svg'
+import likeActiveHoverIcon from '../assets/like-active-nav.svg'
 
 interface AdCardProps {
   ad: Ad
-  isFavorite: boolean
-  onFavoriteChange: (adId: number, next: boolean) => void
 }
 
-export function AdCard({ ad, isFavorite, onFavoriteChange }: AdCardProps) {
+export function AdCard({ ad }: AdCardProps) {
   const [hoverIndex, setHoverIndex] = useState(0)
   const [updatingFav, setUpdatingFav] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { isFavorite, setFavorite } = useFavorites()
+  const favActive = isFavorite(ad.id)
 
   const photos = useMemo(
     () => (ad.photos && ad.photos.length > 0 ? ad.photos : null),
@@ -65,23 +69,9 @@ export function AdCard({ ad, isFavorite, onFavoriteChange }: AdCardProps) {
     }
     if (updatingFav) return
 
-    const next = !isFavorite
-    onFavoriteChange(ad.id, next)
+    const next = !favActive
     setUpdatingFav(true)
-
-    if (next) {
-      await supabase.from('favorites').insert({
-        user_id: user.id,
-        ad_id: ad.id,
-      })
-    } else {
-      await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('ad_id', ad.id)
-    }
-
+    await setFavorite(ad.id, next)
     setUpdatingFav(false)
   }
 
@@ -91,11 +81,31 @@ export function AdCard({ ad, isFavorite, onFavoriteChange }: AdCardProps) {
         <img src={activePhotoUrl} alt="" className="ad-photo" />
         <button
           type="button"
-          className={`ad-fav-button ${isFavorite ? 'is-active' : ''}`}
+          className={`ad-fav-button ${favActive ? 'is-active' : ''}`}
           onClick={handleFavoriteClick}
-          aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+          aria-label={favActive ? 'Убрать из избранного' : 'Добавить в избранное'}
         >
-          <span className="ad-fav-heart" />
+          <img
+            src={favActive ? likeActiveIcon : likeIcon}
+            alt=""
+            className="ad-fav-icon"
+            aria-hidden="true"
+          />
+          {!favActive ? (
+            <img
+              src={likeHoverIcon}
+              alt=""
+              className="ad-fav-icon ad-fav-icon-hover"
+              aria-hidden="true"
+            />
+          ) : (
+            <img
+              src={likeActiveHoverIcon}
+              alt=""
+              className="ad-fav-icon ad-fav-icon-hover"
+              aria-hidden="true"
+            />
+          )}
         </button>
         {photos && photos.length > 1 && (
           <div className="ad-photo-dots">
@@ -109,10 +119,10 @@ export function AdCard({ ad, isFavorite, onFavoriteChange }: AdCardProps) {
         )}
       </div>
       <div className="ad-body">
-        <div className="ad-price">{formattedPrice}</div>
         <div className="ad-title">
           {ad.brand?.name} {ad.model?.name}
         </div>
+        <div className="ad-price">{formattedPrice}</div>
         <div className="ad-meta">
           {ad.year} • {formattedMileage} км
         </div>

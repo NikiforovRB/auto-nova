@@ -8,6 +8,7 @@ import type { Ad, Profile, Region } from '../types'
 import { uploadImageToS3 } from '../s3Upload'
 import { useNavigate } from 'react-router-dom'
 import { FileButtonInput } from '../ui/FileButtonInput'
+import simpleAvatar from '../assets/simple.svg'
 
 export function ProfilePage() {
   const { user, isAdmin, refreshProfile } = useAuth()
@@ -32,7 +33,7 @@ export function ProfilePage() {
           supabase.from('regions').select('*').order('name'),
           supabase
             .from('ads')
-            .select('*, brand:brands(*), model:models(*)')
+            .select('*, brand:brands(*), model:models(*), photos:ad_photos(*)')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false }),
         ])
@@ -76,6 +77,16 @@ export function ProfilePage() {
     setSaving(false)
   }
 
+  const deleteAvatar = async () => {
+    if (!user) return
+    setSaving(true)
+    await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
+    setProfile((prev) => (prev ? { ...prev, avatar_url: null } : prev))
+    await refreshProfile()
+    setAvatarFile(null)
+    setSaving(false)
+  }
+
   if (!user) {
     return (
       <MainLayout>
@@ -108,6 +119,7 @@ export function ProfilePage() {
     <MainLayout>
       <Header />
       <main className="profile-main">
+        <div className="profile-grid">
         <section className="profile-card">
           <h1 className="profile-title">Мой профиль</h1>
           {isAdmin ? (
@@ -126,17 +138,25 @@ export function ProfilePage() {
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="" />
                 ) : (
-                  <div className="avatar-circle-large">
-                    {user.email?.[0]?.toUpperCase() ?? 'A'}
-                  </div>
+                  <img src={simpleAvatar} alt="" />
                 )}
               </div>
-              <FileButtonInput
-                accept="image/*"
-                onFileSelected={setAvatarFile}
-                selectedFileName={avatarFile?.name ?? null}
-                buttonText="Выбрать аватар"
-              />
+              <div className="profile-avatar-actions">
+                <FileButtonInput
+                  accept="image/*"
+                  onFileSelected={setAvatarFile}
+                  selectedFileName={avatarFile?.name ?? null}
+                  buttonText="Выбрать аватар"
+                />
+                <button
+                  type="button"
+                  className="profile-avatar-delete"
+                  onClick={() => void deleteAvatar()}
+                  disabled={saving}
+                >
+                  Удалить аватар
+                </button>
+              </div>
             </div>
 
             <div className="profile-content">
@@ -214,16 +234,42 @@ export function ProfilePage() {
           <h2 className="profile-title">Мои объявления</h2>
           {ads.length ? (
             <ul className="admin-list">
-              {ads.map((ad) => (
-                <li key={ad.id}>
-                  {ad.brand?.name} {ad.model?.name} — {ad.price} ₽
-                </li>
-              ))}
+              {ads.map((ad) => {
+                const firstPhoto =
+                  (ad.photos ?? [])
+                    .slice()
+                    .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))[0]
+                    ?.url ?? null
+                return (
+                  <li key={ad.id} className="profile-ad-row">
+                    <div className="profile-ad-left">
+                      <div className="profile-ad-thumb">
+                        {firstPhoto ? <img src={firstPhoto} alt="" /> : <div className="profile-ad-thumb-empty" />}
+                      </div>
+                      <div className="profile-ad-text">
+                        <div className="profile-ad-title">
+                          {ad.brand?.name} {ad.model?.name}
+                        </div>
+                        <div className="profile-ad-price">{ad.price} ₽</div>
+                        <button type="button" className="link-button" onClick={() => navigate(`/ads/${ad.id}/edit`)}>
+                          Редактировать объявление
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           ) : (
-            <p>У вас пока нет объявлений.</p>
+            <div>
+              <p>У вас пока нет объявлений.</p>
+              <button type="button" className="primary-button" onClick={() => navigate('/ads/new')}>
+                Разместить объявление
+              </button>
+            </div>
           )}
         </section>
+        </div>
       </main>
     </MainLayout>
   )

@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
@@ -61,6 +61,9 @@ export function LoginPage() {
             <button type="submit" className="primary-button" disabled={loading}>
               {loading ? 'Входим…' : 'Войти'}
             </button>
+            <div className="auth-alt">
+              Нет аккаунта? <Link to="/register">Создать</Link>
+            </div>
           </form>
         </section>
       </main>

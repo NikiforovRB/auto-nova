@@ -8,6 +8,7 @@ import { AdminGuard } from '../auth/AdminGuard'
 import { uploadImageToS3 } from '../s3Upload'
 import { useToast } from '../ui/toast/ToastContext'
 import { FileButtonInput } from '../ui/FileButtonInput'
+import { AdminTabs } from './admin/AdminTabs'
 import {
   DndContext,
   KeyboardSensor,
@@ -402,6 +403,7 @@ export function AdminBrandsPage() {
         <Header />
         <main className="admin-main">
           <section className="admin-card">
+            <AdminTabs />
             <h1 className="admin-title">Марки автомобилей</h1>
             <form className="admin-inline-form" onSubmit={handleSubmit}>
               <input
