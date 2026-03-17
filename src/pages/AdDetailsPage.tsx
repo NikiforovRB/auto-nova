@@ -17,6 +17,8 @@ export function AdDetailsPage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
+  const [phone, setPhone] = useState<string | null>(null)
+  const [phoneLoading, setPhoneLoading] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -182,6 +184,31 @@ export function AdDetailsPage() {
     )
   }
 
+  const onShowPhone = async () => {
+    setShowPhone(true)
+    if (phoneLoading) return
+    if (phone !== null) return
+
+    setPhoneLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('get-phone', {
+        body: { ad_id: ad.id },
+      })
+      if (error) {
+        console.error('Failed to load phone', error)
+        setPhone(null)
+        return
+      }
+      const loadedPhone = (data as { phone?: string | null } | null)?.phone ?? null
+      setPhone(loadedPhone)
+    } catch (e) {
+      console.error('Failed to load phone', e)
+      setPhone(null)
+    } finally {
+      setPhoneLoading(false)
+    }
+  }
+
   return (
     <MainLayout>
       <Header />
@@ -233,10 +260,12 @@ export function AdDetailsPage() {
               <button
                 type="button"
                 className="primary-button"
-                onClick={() => setShowPhone(true)}
+                onClick={onShowPhone}
               >
                 {showPhone
-                  ? ad.profile?.phone ?? 'Телефон не указан'
+                  ? phoneLoading
+                    ? 'Загрузка…'
+                    : phone ?? ad.profile?.phone ?? 'Телефон не указан'
                   : 'Показать телефон'}
               </button>
             </div>
