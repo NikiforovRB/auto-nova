@@ -87,6 +87,14 @@ body {
   margin-left: auto;
 }
 
+@media (max-width: 600px) {
+  .footer-link-right {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
 .doc-main {
   margin-top: 16px;
 }
@@ -1298,6 +1306,34 @@ body {
   margin: 0;
   font-size: 14px;
   color: var(--text-muted);
+}
+
+.brand-filters {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.brand-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.brand-filter input,
+.brand-filter select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .brand-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .section-header {
