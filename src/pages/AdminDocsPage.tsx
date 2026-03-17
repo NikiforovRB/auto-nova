@@ -5,8 +5,10 @@ import { supabase } from '../supabaseClient'
 import { AdminGuard } from '../auth/AdminGuard'
 import { useToast } from '../ui/toast/ToastContext'
 import { AdminTabs } from './admin/AdminTabs'
+import { useTranslation } from 'react-i18next'
 
 export function AdminDocsPage() {
+  const { t } = useTranslation()
   const toast = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -23,7 +25,7 @@ export function AdminDocsPage() {
       if (pErr || dErr) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось загрузить документы',
+          title: t('admin.loadDocsError'),
           message: (pErr ?? dErr)?.message ?? 'Unknown error',
         })
       }
@@ -43,9 +45,9 @@ export function AdminDocsPage() {
     const { error } = await supabase.from('site_documents').upsert(updates, { onConflict: 'key' })
     setSaving(false)
     if (error) {
-      toast.push({ variant: 'error', title: 'Не удалось сохранить', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
     } else {
-      toast.push({ variant: 'success', title: 'Документы сохранены', message: 'Изменения применены.' })
+      toast.push({ variant: 'success', title: t('admin.docsSaved'), message: t('admin.changesApplied') })
     }
   }
 
@@ -56,13 +58,13 @@ export function AdminDocsPage() {
         <main className="admin-main">
           <section className="admin-card">
             <AdminTabs />
-            <h1 className="admin-title">Документы</h1>
+            <h1 className="admin-title">{t('admin.docsTitle')}</h1>
             {loading ? (
-              <p>Загрузка…</p>
+              <p>{t('common.loading')}</p>
             ) : (
               <div className="admin-docs">
                 <label className="profile-field">
-                  <span className="label">Политика конфиденциальности</span>
+                  <span className="label">{t('docs.privacyTitle')}</span>
                   <textarea
                     value={privacy}
                     onChange={(e) => setPrivacy(e.target.value)}
@@ -70,7 +72,7 @@ export function AdminDocsPage() {
                   />
                 </label>
                 <label className="profile-field">
-                  <span className="label">Политика обработки персональных данных</span>
+                  <span className="label">{t('docs.personalDataTitle')}</span>
                   <textarea
                     value={personalData}
                     onChange={(e) => setPersonalData(e.target.value)}
@@ -78,7 +80,7 @@ export function AdminDocsPage() {
                   />
                 </label>
                 <button type="button" className="primary-button" onClick={() => void save()} disabled={saving}>
-                  {saving ? 'Сохраняем…' : 'Сохранить'}
+                  {saving ? t('createAd.saving') : t('common.save')}
                 </button>
               </div>
             )}

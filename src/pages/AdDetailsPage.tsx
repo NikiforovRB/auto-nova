@@ -3,23 +3,25 @@ import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import 'dayjs/locale/ru'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
 import { supabase } from '../supabaseClient'
 import type { Ad } from '../types'
+import { useTranslation } from 'react-i18next'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
-dayjs.locale('ru')
 
 export function AdDetailsPage() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams()
   const [ad, setAd] = useState<Ad | null>(null)
   const [photos, setPhotos] = useState<string[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [showPhone, setShowPhone] = useState(false)
   const [phone, setPhone] = useState<string | null>(null)
+  const [ownerName, setOwnerName] = useState<string | null>(null)
+  const [ownerAvatarUrl, setOwnerAvatarUrl] = useState<string | null>(null)
   const [phoneLoading, setPhoneLoading] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -28,13 +30,13 @@ export function AdDetailsPage() {
   useEffect(() => {
     if (!id) {
       setLoading(false)
-      setErrorMessage('Некорректный идентификатор объявления.')
+      setErrorMessage(t('adDetails.invalidId'))
       return
     }
     const adId = Number(id)
     if (Number.isNaN(adId)) {
       setLoading(false)
-      setErrorMessage('Некорректный идентификатор объявления.')
+      setErrorMessage(t('adDetails.invalidId'))
       return
     }
 
@@ -78,8 +80,8 @@ export function AdDetailsPage() {
           console.error('Failed to load ad details (fallback)', adErrorFallback)
           setErrorMessage(
             adErrorFallback.code === 'PGRST116'
-              ? 'Объявление не найдено или недоступно.'
-              : 'Не удалось загрузить объявление. Попробуйте обновить страницу.',
+              ? t('adDetails.notFound')
+              : t('adDetails.loadFailed'),
           )
           setAd(null)
           setPhotos(['https://via.placeholder.com/800x480?text=AUTONOVA'])
@@ -93,7 +95,7 @@ export function AdDetailsPage() {
       }
 
       if (!adRow) {
-        setErrorMessage('Объявление не найдено или недоступно.')
+        setErrorMessage(t('adDetails.notFound'))
         setAd(null)
         setPhotos(['https://via.placeholder.com/800x480?text=AUTONOVA'])
         setLoading(false)
@@ -130,27 +132,53 @@ export function AdDetailsPage() {
   const formattedPrice = useMemo(
     () =>
       ad
-        ? new Intl.NumberFormat('ru-RU', {
+        ? new Intl.NumberFormat(
+            i18n.language === 'ru'
+              ? 'ru-RU'
+              : i18n.language === 'tr'
+                ? 'tr-TR'
+                : i18n.language === 'sr'
+                  ? 'sr-RS'
+                  : i18n.language === 'el'
+                    ? 'el-GR'
+                    : 'en-US',
+            {
             style: 'currency',
-            currency: 'RUB',
+            currency: i18n.language === 'tr' ? 'TRY' : 'RUB',
             maximumFractionDigits: 0,
           }).format(ad.price)
         : '',
-    [ad],
+    [ad, i18n.language],
   )
 
   const formattedMileage = useMemo(
     () =>
-      ad ? new Intl.NumberFormat('ru-RU').format(ad.mileage) : '',
-    [ad],
+      ad
+        ? new Intl.NumberFormat(
+            i18n.language === 'ru'
+              ? 'ru-RU'
+              : i18n.language === 'tr'
+                ? 'tr-TR'
+                : i18n.language === 'sr'
+                  ? 'sr-RS'
+                  : i18n.language === 'el'
+                    ? 'el-GR'
+                    : 'en-US',
+          ).format(ad.mileage)
+        : '',
+    [ad, i18n.language],
   )
 
   const createdAtMoscow = useMemo(
     () =>
       ad
-        ? dayjs.utc(ad.created_at).tz('Europe/Moscow').format('D MMMM YYYY')
+        ? dayjs
+            .utc(ad.created_at)
+            .tz('Europe/Moscow')
+            .locale(i18n.language === 'en' ? 'en' : i18n.language)
+            .format('D MMMM YYYY')
         : '',
-    [ad],
+    [ad, i18n.language],
   )
 
   useEffect(() => {
@@ -169,7 +197,7 @@ export function AdDetailsPage() {
       <MainLayout>
         <Header />
         <main className="ad-details-main">
-          <section className="ad-details-card">Загрузка объявления…</section>
+          <section className="ad-details-card">{t('adDetails.loading')}</section>
         </main>
       </MainLayout>
     )
@@ -181,7 +209,7 @@ export function AdDetailsPage() {
         <Header />
         <main className="ad-details-main">
           <section className="ad-details-card">
-            {errorMessage ?? 'Объявление не найдено.'}
+            {errorMessage ?? t('adDetails.notFound')}
           </section>
         </main>
       </MainLayout>
@@ -203,8 +231,11 @@ export function AdDetailsPage() {
         setPhone(null)
         return
       }
-      const loadedPhone = (data as { phone?: string | null } | null)?.phone ?? null
+      const payload = data as { phone?: string | null; name?: string | null; avatarUrl?: string | null } | null
+      const loadedPhone = payload?.phone ?? null
       setPhone(loadedPhone)
+      setOwnerName(payload?.name ?? null)
+      setOwnerAvatarUrl(payload?.avatarUrl ?? null)
     } catch (e) {
       console.error('Failed to load phone', e)
       setPhone(null)
@@ -224,7 +255,7 @@ export function AdDetailsPage() {
                 type="button"
                 className="ad-details-photo-button"
                 onClick={() => setLightboxOpen(true)}
-                aria-label="Открыть фото на весь экран"
+                aria-label={t('adDetails.openFullscreen')}
               >
                 <img
                   src={photos[activeIndex]}
@@ -256,12 +287,12 @@ export function AdDetailsPage() {
             {ad.region?.name ? <div className="ad-details-region">{ad.region.name}</div> : null}
             <div className="ad-details-meta">
               <span>
-                {ad.year} • {formattedMileage} км
+                {ad.year} • {formattedMileage} {t('units.km')}
               </span>
               {ad.city && <span>{ad.city}</span>}
             </div>
             <div className="ad-details-contacts">
-              <h2>Контакты</h2>
+              <h2>{t('adDetails.contacts')}</h2>
               <button
                 type="button"
                 className="primary-button"
@@ -269,10 +300,18 @@ export function AdDetailsPage() {
               >
                 {showPhone
                   ? phoneLoading
-                    ? 'Загрузка…'
-                    : phone ?? ad.profile?.phone ?? 'Телефон не указан'
-                  : 'Показать телефон'}
+                    ? t('adDetails.phoneLoading')
+                    : phone ?? ad.profile?.phone ?? t('adDetails.phoneNotSet')
+                  : t('adDetails.showPhone')}
               </button>
+              {showPhone ? (
+                <div className="ad-owner">
+                  <div className="ad-owner-avatar">
+                    {ownerAvatarUrl ? <img src={ownerAvatarUrl} alt="" /> : <div className="ad-owner-avatar-empty" />}
+                  </div>
+                  <div className="ad-owner-name">{ownerName ?? '—'}</div>
+                </div>
+              ) : null}
             </div>
             </div>
           </div>
@@ -281,7 +320,7 @@ export function AdDetailsPage() {
             <div className="ad-details-description">{ad.description}</div>
           ) : null}
           <div className="ad-details-created">
-            Объявление размещено: {createdAtMoscow}
+            {t('adDetails.posted', { date: createdAtMoscow })}
           </div>
         </section>
 
@@ -293,7 +332,7 @@ export function AdDetailsPage() {
             onClick={() => setLightboxOpen(false)}
           >
             <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
-              <button type="button" className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Закрыть">
+              <button type="button" className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label={t('adDetails.dragLightboxClose')}>
                 ✕
               </button>
               {photos.length > 1 ? (
@@ -302,7 +341,7 @@ export function AdDetailsPage() {
                     type="button"
                     className="lightbox-nav lightbox-prev"
                     onClick={() => setActiveIndex((prev) => (prev - 1 + photos.length) % photos.length)}
-                    aria-label="Предыдущее фото"
+                    aria-label={t('adDetails.prevPhoto')}
                   >
                     ‹
                   </button>
@@ -310,7 +349,7 @@ export function AdDetailsPage() {
                     type="button"
                     className="lightbox-nav lightbox-next"
                     onClick={() => setActiveIndex((prev) => (prev + 1) % photos.length)}
-                    aria-label="Следующее фото"
+                    aria-label={t('adDetails.nextPhoto')}
                   >
                     ›
                   </button>

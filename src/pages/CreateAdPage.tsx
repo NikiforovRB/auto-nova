@@ -9,6 +9,7 @@ import type { Brand, Model, ModelGeneration, Region } from '../types'
 import { uploadImageToS3 } from '../s3Upload'
 import { FileButtonInput } from '../ui/FileButtonInput'
 import addIcon from '../assets/add.svg'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   PointerSensor,
@@ -26,6 +27,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 export function CreateAdPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [brands, setBrands] = useState<Brand[]>([])
@@ -212,11 +214,11 @@ export function CreateAdPage() {
       <Header />
       <main className="profile-main">
         <section className="profile-card create-ad-card">
-          <h1 className="profile-title">Новое объявление</h1>
+          <h1 className="profile-title">{t('createAd.title')}</h1>
           <form className="profile-form create-ad-form" onSubmit={handleSubmit}>
             <div className="create-ad-grid">
               <label className="profile-field">
-              <span className="label">Марка</span>
+              <span className="label">{t('createAd.brand')}</span>
               <select
                 value={brandId ?? ''}
                 onChange={(e) =>
@@ -224,7 +226,7 @@ export function CreateAdPage() {
                 }
                 required
               >
-                <option value="">Выберите марку</option>
+                <option value="">{t('createAd.chooseBrand')}</option>
                 {brands.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -234,7 +236,7 @@ export function CreateAdPage() {
             </label>
 
               <label className="profile-field">
-              <span className="label">Модель</span>
+              <span className="label">{t('createAd.model')}</span>
               <select
                 value={modelId ?? ''}
                 onChange={(e) =>
@@ -242,7 +244,7 @@ export function CreateAdPage() {
                 }
                 required
               >
-                <option value="">Выберите модель</option>
+                <option value="">{t('createAd.chooseModel')}</option>
                 {filteredModels.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
@@ -252,7 +254,7 @@ export function CreateAdPage() {
             </label>
 
               <label className="profile-field">
-              <span className="label">Год выпуска</span>
+              <span className="label">{t('createAd.year')}</span>
               <input
                 type="number"
                 required
@@ -263,7 +265,7 @@ export function CreateAdPage() {
 
               {modelId && filteredGenerations.length > 0 && (
                 <div className="profile-field create-ad-generation">
-                  <span className="label">Поколение</span>
+                  <span className="label">{t('createAd.generation')}</span>
                   <div className="generation-grid">
                     {filteredGenerations.map((g) => {
                       const active = generationId === g.id
@@ -296,7 +298,7 @@ export function CreateAdPage() {
               )}
 
               <label className="profile-field">
-              <span className="label">Пробег, км</span>
+              <span className="label">{t('createAd.mileage')}</span>
               <input
                 type="text"
                 required
@@ -307,7 +309,7 @@ export function CreateAdPage() {
             </label>
 
               <label className="profile-field">
-              <span className="label">Цена, ₽</span>
+              <span className="label">{t('createAd.price')}</span>
               <input
                 type="text"
                 required
@@ -318,14 +320,14 @@ export function CreateAdPage() {
             </label>
 
               <label className="profile-field">
-              <span className="label">Регион</span>
+              <span className="label">{t('createAd.region')}</span>
               <select
                 value={regionId ?? ''}
                 onChange={(e) =>
                   setRegionId(e.target.value ? Number(e.target.value) : null)
                 }
               >
-                <option value="">Не выбран</option>
+                <option value="">{t('profilePage.regionNone')}</option>
                 {regions.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -335,7 +337,7 @@ export function CreateAdPage() {
             </label>
 
               <label className="profile-field create-ad-desc">
-              <span className="label">Описание</span>
+              <span className="label">{t('createAd.description')}</span>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -345,7 +347,7 @@ export function CreateAdPage() {
             </div>
 
             <div className="profile-field create-ad-photos-field">
-              <span className="label">Фотографии</span>
+              <span className="label">{t('createAd.photos')}</span>
               <FileButtonInput
                 multiple
                 accept="image/*"
@@ -409,7 +411,7 @@ export function CreateAdPage() {
 
             <button type="submit" className="primary-button create-ad-submit" disabled={saving}>
               <img src={addIcon} alt="" className="create-ad-submit-icon" aria-hidden="true" />
-              {saving ? 'Сохраняем…' : 'Разместить объявление'}
+              {saving ? t('createAd.saving') : t('createAd.submit')}
             </button>
           </form>
         </section>

@@ -9,8 +9,10 @@ import { uploadImageToS3 } from '../s3Upload'
 import { useNavigate } from 'react-router-dom'
 import { FileButtonInput } from '../ui/FileButtonInput'
 import simpleAvatar from '../assets/simple.svg'
+import { useTranslation } from 'react-i18next'
 
 export function ProfilePage() {
+  const { t } = useTranslation()
   const { user, isAdmin, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -93,8 +95,8 @@ export function ProfilePage() {
         <Header />
         <main className="profile-main">
           <section className="profile-card">
-            <h1 className="profile-title">Мой профиль</h1>
-            <p>Необходимо войти в аккаунт.</p>
+            <h1 className="profile-title">{t('profilePage.title')}</h1>
+            <p>{t('common.requiredLogin')}</p>
           </section>
         </main>
       </MainLayout>
@@ -107,8 +109,8 @@ export function ProfilePage() {
         <Header />
         <main className="profile-main">
           <section className="profile-card">
-            <h1 className="profile-title">Мой профиль</h1>
-            <p>Загрузка…</p>
+            <h1 className="profile-title">{t('profilePage.title')}</h1>
+            <p>{t('profilePage.loadingProfile')}</p>
           </section>
         </main>
       </MainLayout>
@@ -123,7 +125,7 @@ export function ProfilePage() {
       <main className="profile-main">
         <div className="profile-grid">
         <section className="profile-card">
-          <h1 className="profile-title">Мой профиль</h1>
+          <h1 className="profile-title">{t('profilePage.title')}</h1>
           {isAdmin ? (
             <button
               type="button"
@@ -131,7 +133,7 @@ export function ProfilePage() {
               onClick={() => navigate('/admin/brands')}
               style={{ marginBottom: 12 }}
             >
-              Перейти в панель администратора
+              {t('profilePage.adminGo')}
             </button>
           ) : null}
           <form className="profile-form" onSubmit={handleSubmit}>
@@ -148,7 +150,7 @@ export function ProfilePage() {
                   accept="image/*"
                   onFileSelected={setAvatarFile}
                   selectedFileName={avatarFile?.name ?? null}
-                  buttonText="Выбрать аватар"
+                  buttonText={t('profilePage.avatarChoose')}
                 />
                 <button
                   type="button"
@@ -156,18 +158,18 @@ export function ProfilePage() {
                   onClick={() => void deleteAvatar()}
                   disabled={saving}
                 >
-                  Удалить аватар
+                  {t('profilePage.avatarDelete')}
                 </button>
               </div>
             </div>
 
             <div className="profile-content">
               <div className="profile-row">
-                <span className="label">Email</span>
+                <span className="label">{t('profilePage.email')}</span>
                 <span>{user.email}</span>
               </div>
               <label className="profile-field">
-                <span className="label">Имя</span>
+                <span className="label">{t('profilePage.firstName')}</span>
                 <input
                   type="text"
                   value={profile.first_name ?? ''}
@@ -177,7 +179,7 @@ export function ProfilePage() {
                 />
               </label>
               <label className="profile-field">
-                <span className="label">Фамилия</span>
+                <span className="label">{t('profilePage.lastName')}</span>
                 <input
                   type="text"
                   value={profile.last_name ?? ''}
@@ -187,7 +189,7 @@ export function ProfilePage() {
                 />
               </label>
               <label className="profile-field">
-                <span className="label">Телефон</span>
+                <span className="label">{t('profilePage.phone')}</span>
                 <input
                   type="tel"
                   value={profile.phone ?? ''}
@@ -197,7 +199,7 @@ export function ProfilePage() {
                 />
               </label>
               <label className="profile-field">
-                <span className="label">Регион</span>
+                <span className="label">{t('profilePage.region')}</span>
                 <select
                   value={profile.region_id ?? ''}
                   onChange={(e) =>
@@ -207,7 +209,7 @@ export function ProfilePage() {
                     })
                   }
                 >
-                  <option value="">Не выбран</option>
+                  <option value="">{t('profilePage.regionNone')}</option>
                   {regions.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
@@ -216,7 +218,7 @@ export function ProfilePage() {
                 </select>
               </label>
               <button type="submit" className="primary-button" disabled={saving}>
-                Сохранить
+                {t('common.save')}
               </button>
               <button
                 type="button"
@@ -226,14 +228,14 @@ export function ProfilePage() {
                   navigate('/')
                 }}
               >
-                Выйти
+                {t('profilePage.logout')}
               </button>
             </div>
           </form>
         </section>
 
         <section className="profile-card">
-          <h2 className="profile-title">Мои объявления</h2>
+          <h2 className="profile-title">{t('profilePage.myAdsTitle')}</h2>
           {ads.length ? (
             <ul className="admin-list">
               {previewAds.map((ad) => {
@@ -245,16 +247,21 @@ export function ProfilePage() {
                 return (
                   <li key={ad.id} className="profile-ad-row">
                     <div className="profile-ad-left">
-                      <div className="profile-ad-thumb">
+                      <button
+                        type="button"
+                        className="profile-ad-thumb"
+                        onClick={() => navigate(`/ads/${ad.id}`)}
+                        aria-label={`${ad.brand?.name ?? ''} ${ad.model?.name ?? ''}`.trim() || `#${ad.id}`}
+                      >
                         {firstPhoto ? <img src={firstPhoto} alt="" /> : <div className="profile-ad-thumb-empty" />}
-                      </div>
+                      </button>
                       <div className="profile-ad-text">
                         <div className="profile-ad-title">
                           {ad.brand?.name} {ad.model?.name}
                         </div>
                         <div className="profile-ad-price">{ad.price} ₽</div>
                         <button type="button" className="link-button" onClick={() => navigate(`/ads/${ad.id}/edit`)}>
-                          Редактировать объявление
+                          {t('profilePage.editAd')}
                         </button>
                       </div>
                     </div>
@@ -264,9 +271,9 @@ export function ProfilePage() {
             </ul>
           ) : (
             <div>
-              <p>У вас пока нет объявлений.</p>
+              <p>{t('profilePage.myAdsEmpty')}</p>
               <button type="button" className="primary-button" onClick={() => navigate('/ads/new')}>
-                Разместить объявление
+                {t('profilePage.createAd')}
               </button>
             </div>
           )}
@@ -278,7 +285,7 @@ export function ProfilePage() {
               style={{ marginTop: 12 }}
               onClick={() => navigate('/profile/ads')}
             >
-              Показать все объявления
+              {t('profilePage.showAllAds')}
             </button>
           ) : (
             null

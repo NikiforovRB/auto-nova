@@ -8,12 +8,14 @@ import likeIcon from '../assets/like.svg'
 import likeHoverIcon from '../assets/like-nav.svg'
 import likeActiveIcon from '../assets/like-active.svg'
 import likeActiveHoverIcon from '../assets/like-active-nav.svg'
+import { useTranslation } from 'react-i18next'
 
 interface AdCardProps {
   ad: Ad
 }
 
 export function AdCard({ ad }: AdCardProps) {
+  const { t, i18n } = useTranslation()
   const [hoverIndex, setHoverIndex] = useState(0)
   const [updatingFav, setUpdatingFav] = useState(false)
   const navigate = useNavigate()
@@ -22,7 +24,13 @@ export function AdCard({ ad }: AdCardProps) {
   const favActive = isFavorite(ad.id)
 
   const photos = useMemo(
-    () => (ad.photos && ad.photos.length > 0 ? ad.photos : null),
+    () => {
+      if (!ad.photos || ad.photos.length === 0) return null
+      return ad.photos
+        .slice()
+        .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+        .slice(0, 12)
+    },
     [ad.photos],
   )
 
@@ -32,17 +40,39 @@ export function AdCard({ ad }: AdCardProps) {
 
   const formattedPrice = useMemo(
     () =>
-      new Intl.NumberFormat('ru-RU', {
+      new Intl.NumberFormat(
+        i18n.language === 'ru'
+          ? 'ru-RU'
+          : i18n.language === 'tr'
+            ? 'tr-TR'
+            : i18n.language === 'sr'
+              ? 'sr-RS'
+              : i18n.language === 'el'
+                ? 'el-GR'
+                : 'en-US',
+        {
         style: 'currency',
-        currency: 'RUB',
+        currency: i18n.language === 'tr' ? 'TRY' : 'RUB',
         maximumFractionDigits: 0,
-      }).format(ad.price),
-    [ad.price],
+      },
+      ).format(ad.price),
+    [ad.price, i18n.language],
   )
 
   const formattedMileage = useMemo(
-    () => new Intl.NumberFormat('ru-RU').format(ad.mileage),
-    [ad.mileage],
+    () =>
+      new Intl.NumberFormat(
+        i18n.language === 'ru'
+          ? 'ru-RU'
+          : i18n.language === 'tr'
+            ? 'tr-TR'
+            : i18n.language === 'sr'
+              ? 'sr-RS'
+              : i18n.language === 'el'
+                ? 'el-GR'
+                : 'en-US',
+      ).format(ad.mileage),
+    [ad.mileage, i18n.language],
   )
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -77,13 +107,17 @@ export function AdCard({ ad }: AdCardProps) {
 
   return (
     <article className="ad-card" onClick={handleCardClick}>
-      <div className="ad-photo-wrapper" onMouseMove={handleMouseMove}>
+      <div
+        className="ad-photo-wrapper"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverIndex(0)}
+      >
         <img src={activePhotoUrl} alt="" className="ad-photo" />
         <button
           type="button"
           className={`ad-fav-button ${favActive ? 'is-active' : ''}`}
           onClick={handleFavoriteClick}
-          aria-label={favActive ? 'Убрать из избранного' : 'Добавить в избранное'}
+          aria-label={favActive ? t('adCard.removeFav') : t('adCard.addFav')}
         >
           <img
             src={favActive ? likeActiveIcon : likeIcon}
@@ -124,7 +158,7 @@ export function AdCard({ ad }: AdCardProps) {
         </div>
         <div className="ad-price">{formattedPrice}</div>
         <div className="ad-meta">
-          {ad.year} • {formattedMileage} км
+          {ad.year} • {formattedMileage} {t('units.km')}
         </div>
       </div>
     </article>

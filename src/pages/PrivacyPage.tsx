@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
 import { supabase } from '../supabaseClient'
+import { useTranslation } from 'react-i18next'
 
 export function PrivacyPage() {
+  const { t } = useTranslation()
   const [content, setContent] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
@@ -25,14 +27,14 @@ export function PrivacyPage() {
       <Header />
       <main className="doc-main">
         <section className="doc-card">
-          <h1 className="doc-title">Политика конфиденциальности</h1>
+          <h1 className="doc-title">{t('docs.privacyTitle')}</h1>
           {loading ? (
-            <p className="doc-muted">Загрузка…</p>
+            <p className="doc-muted">{t('common.loading')}</p>
           ) : content.trim() ? (
             <div className="doc-content">{content}</div>
           ) : (
             <p className="doc-muted">
-              Текст документа будет добавлен администратором в разделе «Документы».
+              {t('docs.emptyHint')}
             </p>
           )}
         </section>

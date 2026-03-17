@@ -24,8 +24,10 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { AdminTabs } from './admin/AdminTabs'
+import { useTranslation } from 'react-i18next'
 
 export function AdminRegionsPage() {
+  const { t } = useTranslation()
   const [regions, setRegions] = useState<Region[]>([])
   const [name, setName] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -62,12 +64,12 @@ export function AdminRegionsPage() {
       .select()
       .single()
     if (error || !data) {
-      toast.push({ variant: 'error', title: 'Ошибка добавления региона', message: error?.message ?? 'Unknown error' })
+      toast.push({ variant: 'error', title: t('admin.regionAddError'), message: error?.message ?? 'Unknown error' })
       return
     }
     setRegions((prev) => [...prev, data as Region])
     setName('')
-    toast.push({ variant: 'success', title: 'Регион добавлен', message: nextName })
+    toast.push({ variant: 'success', title: t('admin.regionAdded'), message: nextName })
   }
 
   const startEdit = (r: Region) => {
@@ -85,23 +87,23 @@ export function AdminRegionsPage() {
     if (!nextName) return
     const { error } = await supabase.from('regions').update({ name: nextName }).eq('id', r.id)
     if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка сохранения', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
       return
     }
     setRegions((prev) => prev.map((x) => (x.id === r.id ? { ...x, name: nextName } : x)))
     cancelEdit()
-    toast.push({ variant: 'success', title: 'Регион обновлён', message: nextName })
+    toast.push({ variant: 'success', title: t('admin.regionSaved'), message: nextName })
   }
 
   const deleteRegion = async (r: Region) => {
-    if (!confirm(`Удалить регион "${r.name}"?`)) return
+    if (!confirm(t('admin.confirmDeleteRegion', { name: r.name }))) return
     const { error } = await supabase.from('regions').delete().eq('id', r.id)
     if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка удаления', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
       return
     }
     setRegions((prev) => prev.filter((x) => x.id !== r.id))
-    toast.push({ variant: 'success', title: 'Регион удалён', message: r.name })
+    toast.push({ variant: 'success', title: t('admin.regionDeleted'), message: r.name })
   }
 
   const persistOrder = async (ordered: Region[]) => {
@@ -109,7 +111,7 @@ export function AdminRegionsPage() {
       const r = ordered[i]
       const { error } = await supabase.from('regions').update({ sort_order: i }).eq('id', r.id)
       if (error) {
-        toast.push({ variant: 'error', title: 'Не удалось сохранить порядок', message: error.message })
+        toast.push({ variant: 'error', title: t('admin.orderSaveFailed'), message: error.message })
         break
       }
     }
@@ -137,7 +139,7 @@ export function AdminRegionsPage() {
     return (
       <li ref={setNodeRef} style={style} className="admin-edit-row">
         <div className="admin-edit-row-body">{children}</div>
-        <button type="button" className="drag-handle" {...attributes} {...listeners} aria-label="Перетащить">
+        <button type="button" className="drag-handle" {...attributes} {...listeners} aria-label={t('admin.dragAria')}>
           ⋮⋮
         </button>
       </li>
@@ -151,21 +153,21 @@ export function AdminRegionsPage() {
         <main className="admin-main">
           <section className="admin-card">
             <AdminTabs />
-            <h1 className="admin-title">Регионы</h1>
+            <h1 className="admin-title">{t('admin.regionsTitle')}</h1>
             <form className="admin-inline-form" onSubmit={handleAdd}>
               <input
                 type="text"
-                placeholder="Новый регион"
+                placeholder={t('admin.newRegionPlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
               <button type="submit" className="primary-button">
-                Добавить
+                {t('admin.add')}
               </button>
             </form>
 
             {loading ? (
-              <p>Загрузка…</p>
+              <p>{t('common.loading')}</p>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                 <SortableContext items={regions.map((r) => r.id)} strategy={verticalListSortingStrategy}>
@@ -185,10 +187,10 @@ export function AdminRegionsPage() {
                                   />
                                   <div className="admin-actions">
                                     <button type="button" className="link-button" onClick={() => void saveEdit(r)}>
-                                      Сохранить
+                                      {t('common.save')}
                                     </button>
                                     <button type="button" className="link-button" onClick={cancelEdit}>
-                                      Отмена
+                                      {t('common.cancel')}
                                     </button>
                                   </div>
                                 </div>
@@ -197,10 +199,10 @@ export function AdminRegionsPage() {
                                   <div className="admin-brand-name">{r.name}</div>
                                   <div className="admin-actions">
                                     <button type="button" className="link-button" onClick={() => startEdit(r)}>
-                                      Редактировать
+                                      {t('common.edit')}
                                     </button>
                                     <button type="button" className="link-button" onClick={() => deleteRegion(r)}>
-                                      Удалить
+                                      {t('common.delete')}
                                     </button>
                                   </div>
                                 </div>

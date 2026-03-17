@@ -9,6 +9,7 @@ import geoIcon from '../assets/geo.svg'
 import addBlueIcon from '../assets/add-blue.svg'
 import simpleAvatar from '../assets/simple.svg'
 import type { Region } from '../types'
+import { useTranslation } from 'react-i18next'
 
 type SearchPreviewItem = {
   id: number
@@ -19,6 +20,7 @@ type SearchPreviewItem = {
 }
 
 export function Header() {
+  const { t, i18n } = useTranslation()
   const [query, setQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
@@ -166,13 +168,25 @@ export function Header() {
           </div>
         </div>
         <div className="top-bar-right">
+          <select
+            className="lang-switch"
+            value={i18n.language}
+            onChange={(e) => void i18n.changeLanguage(e.target.value)}
+            aria-label="Language"
+          >
+            <option value="ru">{t('lang.ru')}</option>
+            <option value="en">{t('lang.en')}</option>
+            <option value="tr">{t('lang.tr')}</option>
+            <option value="sr">{t('lang.sr')}</option>
+            <option value="el">{t('lang.el')}</option>
+          </select>
           <button
             type="button"
             className="create-ad-link"
             onClick={handleCreateAd}
           >
             <img src={addBlueIcon} alt="" className="create-ad-link-icon" aria-hidden="true" />
-            Разместить объявление
+            {t('header.createAd')}
           </button>
         </div>
       </div>
@@ -182,7 +196,7 @@ export function Header() {
           type="button"
           className="logo-button"
           onClick={() => navigate('/')}
-          aria-label="На главную AUTONOVA"
+          aria-label={t('header.toHomeAria')}
         >
           <img src={logoImg} alt="AUTONOVA" className="logo-image" />
         </button>
@@ -194,7 +208,7 @@ export function Header() {
             onClick={handleCreateAd}
           >
             <img src={addBlueIcon} alt="" className="create-ad-link-icon" aria-hidden="true" />
-            Разместить объявление
+            {t('header.createAd')}
           </button>
         </div>
 
@@ -202,7 +216,7 @@ export function Header() {
           <input
             type="search"
             className="search-input"
-            placeholder="Поиск по объявлениям"
+            placeholder={t('header.searchPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => {
@@ -210,9 +224,9 @@ export function Header() {
             }}
           />
           {searchOpen && normalizedQuery.length >= 3 && (
-            <div className="search-dropdown" role="listbox" aria-label="Результаты поиска">
+            <div className="search-dropdown" role="listbox" aria-label={t('header.searchResultsAria')}>
               {searchLoading ? (
-                <div className="search-dropdown-row search-muted">Ищем…</div>
+                <div className="search-dropdown-row search-muted">{t('header.searching')}</div>
               ) : searchItems.length ? (
                 searchItems.map((item) => {
                   const title = `${item.brand?.name ?? ''} ${item.model?.name ?? ''}`.trim()
@@ -239,14 +253,14 @@ export function Header() {
                     >
                       <img src={photoUrl} alt="" className="search-item-photo" aria-hidden="true" />
                       <div className="search-item-text">
-                        <div className="search-item-title">{title || `Объявление #${item.id}`}</div>
+                        <div className="search-item-title">{title || t('header.listingNum', { id: item.id })}</div>
                         <div className="search-item-price">{priceText}</div>
                       </div>
                     </button>
                   )
                 })
               ) : (
-                <div className="search-dropdown-row search-muted">Ничего не найдено</div>
+                <div className="search-dropdown-row search-muted">{t('header.nothingFound')}</div>
               )}
             </div>
           )}
@@ -260,7 +274,9 @@ export function Header() {
           >
             <img src={heartIcon} alt="" className="icon-heart-img" aria-hidden="true" />
             <span className="icon-label">
-              {favoritesCount > 0 ? `Избранное • ${favoritesCount}` : 'Избранное'}
+              {favoritesCount > 0
+                ? t('header.favoritesWithCount', { count: favoritesCount })
+                : t('header.favorites')}
             </span>
           </button>
 
@@ -279,11 +295,11 @@ export function Header() {
             <span className="profile-label">
               {user ? (
                 <>
-                  <span>Мой профиль</span>
-                  {isAdmin ? <span className="profile-subtitle">Администратор</span> : null}
+                  <span>{t('header.myProfile')}</span>
+                  {isAdmin ? <span className="profile-subtitle">{t('header.admin')}</span> : null}
                 </>
               ) : (
-                'Войти'
+                t('auth.login')
               )}
             </span>
           </button>

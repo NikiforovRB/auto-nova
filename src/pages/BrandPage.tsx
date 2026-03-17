@@ -7,8 +7,10 @@ import type { Ad, Brand, Model } from '../types'
 import { useAuth } from '../auth/AuthContext'
 import { AdCard } from '../components/AdCard'
 import { useFavorites } from '../favorites/FavoritesContext'
+import { useTranslation } from 'react-i18next'
 
 export function BrandPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const brandId = id ? Number(id) : NaN
   const [brand, setBrand] = useState<Brand | null>(null)
@@ -68,10 +70,13 @@ export function BrandPage() {
     void load()
   }, [brandId, navigate])
 
-  const title = useMemo(() => (brand?.name ? `Купить ${brand.name}` : 'Купить'), [brand?.name])
+  const title = useMemo(
+    () => (brand?.name ? t('brand.buy', { brand: brand.name }) : t('brand.buyShort')),
+    [brand?.name, t],
+  )
   const adsTitle = useMemo(
-    () => (brand?.name ? `Объявления по продаже ${brand.name}` : 'Объявления'),
-    [brand?.name],
+    () => (brand?.name ? t('brand.adsForBrand', { brand: brand.name }) : t('brand.ads')),
+    [brand?.name, t],
   )
 
   const filteredAds = useMemo(() => {
@@ -101,13 +106,13 @@ export function BrandPage() {
         <section className="hero-section">
           <div className="hero-text">
             <h1 className="hero-title">{title}</h1>
-            <p className="hero-subtitle">Все активные объявления по выбранной марке.</p>
+            <p className="hero-subtitle">{t('brand.heroSubtitle')}</p>
           </div>
           <div className="brand-filters">
             <label className="brand-filter">
-              <span className="label">Модель</span>
+              <span className="label">{t('brand.filters.model')}</span>
               <select value={modelId ?? ''} onChange={(e) => setModelId(e.target.value ? Number(e.target.value) : null)}>
-                <option value="">Все</option>
+                <option value="">{t('brand.filters.all')}</option>
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
@@ -116,27 +121,27 @@ export function BrandPage() {
               </select>
             </label>
             <label className="brand-filter">
-              <span className="label">Год от</span>
+              <span className="label">{t('brand.filters.yearFrom')}</span>
               <input inputMode="numeric" value={yearMin} onChange={(e) => setYearMin(e.target.value.replace(/\D/g, ''))} />
             </label>
             <label className="brand-filter">
-              <span className="label">Год до</span>
+              <span className="label">{t('brand.filters.yearTo')}</span>
               <input inputMode="numeric" value={yearMax} onChange={(e) => setYearMax(e.target.value.replace(/\D/g, ''))} />
             </label>
             <label className="brand-filter">
-              <span className="label">Пробег от</span>
+              <span className="label">{t('brand.filters.mileageFrom')}</span>
               <input inputMode="numeric" value={mileageMin} onChange={(e) => setMileageMin(e.target.value)} />
             </label>
             <label className="brand-filter">
-              <span className="label">Пробег до</span>
+              <span className="label">{t('brand.filters.mileageTo')}</span>
               <input inputMode="numeric" value={mileageMax} onChange={(e) => setMileageMax(e.target.value)} />
             </label>
             <label className="brand-filter">
-              <span className="label">Цена от</span>
+              <span className="label">{t('brand.filters.priceFrom')}</span>
               <input inputMode="numeric" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} />
             </label>
             <label className="brand-filter">
-              <span className="label">Цена до</span>
+              <span className="label">{t('brand.filters.priceTo')}</span>
               <input inputMode="numeric" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
             </label>
           </div>
@@ -163,7 +168,7 @@ export function BrandPage() {
               ))}
             </div>
           ) : (
-            <div className="ads-empty">Пока нет активных объявлений</div>
+            <div className="ads-empty">{t('brand.adsEmpty')}</div>
           )}
         </section>
       </main>

@@ -7,8 +7,10 @@ import type { Ad, Brand } from '../types'
 import { useAuth } from '../auth/AuthContext'
 import { AdCard } from '../components/AdCard'
 import { useFavorites } from '../favorites/FavoritesContext'
+import { useTranslation } from 'react-i18next'
 
 export function HomePage() {
+  const { t } = useTranslation()
   const [brands, setBrands] = useState<Brand[]>([])
   const [ads, setAds] = useState<Ad[]>([])
   const [selectedBrandId] = useState<number | null>(null)
@@ -57,16 +59,16 @@ export function HomePage() {
       <main className="home-main">
         <section className="hero-section">
           <div className="hero-text">
-            <h1 className="hero-title">Площадка для покупки и продажи автомобилей</h1>
+            <h1 className="hero-title">{t('home.heroTitle')}</h1>
             <p className="hero-subtitle">
-              AUTONOVA — удобный сервис для поиска, продажи и покупки автомобилей.
+              {t('home.heroSubtitle')}
             </p>
           </div>
         </section>
 
         <section className="brands-section">
           <div className="section-header">
-            <h2 className="section-title">Популярные марки</h2>
+            <h2 className="section-title">{t('home.popularBrands')}</h2>
           </div>
           <div className="brands-grid">
             {brands.map((brand) => (
@@ -86,13 +88,13 @@ export function HomePage() {
                 <span className="brand-pill-text">{brand.name}</span>
               </button>
             ))}
-            {!brands.length && <div className="brand-empty">Марки пока не добавлены</div>}
+            {!brands.length && <div className="brand-empty">{t('home.brandsEmpty')}</div>}
           </div>
         </section>
 
         <section className="ads-section">
           <div className="section-header">
-            <h2 className="section-title">Объявления</h2>
+            <h2 className="section-title">{t('home.ads')}</h2>
           </div>
           {loading ? (
             <div className="ads-grid">
@@ -111,7 +113,7 @@ export function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="ads-empty">Пока нет активных объявлений</div>
+            <div className="ads-empty">{t('home.adsEmpty')}</div>
           )}
         </section>
       </main>

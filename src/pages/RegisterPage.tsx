@@ -4,8 +4,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
+import { useTranslation } from 'react-i18next'
 
 export function RegisterPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -33,9 +35,7 @@ export function RegisterPage() {
       // Common case when SMTP / email templates are misconfigured:
       // Supabase returns 500 with "Error sending confirmation email".
       if (signUpError.message.toLowerCase().includes('confirmation email')) {
-        setError(
-          'Supabase не смог отправить письмо подтверждения. Проверьте настройки SMTP (Sender email/host/port/login/password), а также шаблоны Email. Временно можно отключить подтверждение email в Auth → Providers → Email.',
-        )
+        setError(t('auth.smtpError'))
         return
       }
       setError(signUpError.message)
@@ -44,7 +44,7 @@ export function RegisterPage() {
 
     // If email confirmations are enabled, session may be null here.
     if (!data.session) {
-      setSuccessMessage('Аккаунт создан. Проверьте почту и подтвердите email, затем войдите.')
+      setSuccessMessage(t('auth.createdCheckEmail'))
       return
     }
 
@@ -56,13 +56,13 @@ export function RegisterPage() {
       <Header />
       <main className="auth-main">
         <section className="auth-card">
-          <h1 className="auth-title">Регистрация в AUTONOVA</h1>
+          <h1 className="auth-title">{t('auth.registerTitle')}</h1>
           <p className="auth-subtitle">
-            После заполнения формы мы отправим вам письмо для подтверждения регистрации
+            {t('auth.registerSubtitle')}
           </p>
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span>Email</span>
+              <span>{t('auth.email')}</span>
               <input
                 type="email"
                 required
@@ -71,7 +71,7 @@ export function RegisterPage() {
               />
             </label>
             <label className="auth-field">
-              <span>Пароль</span>
+              <span>{t('auth.password')}</span>
               <input
                 type="password"
                 required
@@ -82,10 +82,10 @@ export function RegisterPage() {
             {error && <div className="auth-error">{error}</div>}
             {successMessage && <div className="auth-success">{successMessage}</div>}
             <button type="submit" className="primary-button" disabled={loading}>
-              {loading ? 'Создаём…' : 'Создать аккаунт'}
+              {loading ? t('auth.creating') : t('auth.createAccount')}
             </button>
             <div className="auth-alt">
-              Уже есть аккаунт? <Link to="/login">Войти</Link>
+              <Link to="/login">{t('auth.haveAccount')}</Link>
             </div>
           </form>
         </section>

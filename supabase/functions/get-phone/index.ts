@@ -68,7 +68,7 @@ serve(async (req) => {
 
     const { data: profileRow, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('phone')
+      .select('phone, first_name, last_name, full_name, avatar_url')
       .eq('id', userId)
       .maybeSingle()
 
@@ -79,9 +79,18 @@ serve(async (req) => {
       })
     }
 
-    const phone = (profileRow as { phone: string | null } | null)?.phone ?? null
+    const row = profileRow as
+      | { phone: string | null; first_name: string | null; last_name: string | null; full_name: string | null; avatar_url: string | null }
+      | null
 
-    return new Response(JSON.stringify({ phone }), {
+    const phone = row?.phone ?? null
+    const first = row?.first_name?.trim() ?? ''
+    const last = row?.last_name?.trim() ?? ''
+    const full = row?.full_name?.trim() ?? ''
+    const name = `${first} ${last}`.trim() || full || null
+    const avatarUrl = row?.avatar_url ?? null
+
+    return new Response(JSON.stringify({ phone, name, avatarUrl }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

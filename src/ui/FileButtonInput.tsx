@@ -1,4 +1,5 @@
 import { useId, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface FileButtonInputProps {
   accept?: string
@@ -15,10 +16,11 @@ export function FileButtonInput({
   multiple,
   onFileSelected,
   onFilesSelected,
-  buttonText = 'Выбрать фото',
+  buttonText,
   selectedFileName,
   disabled,
 }: FileButtonInputProps) {
+  const { t } = useTranslation()
   const inputId = useId()
   const ref = useRef<HTMLInputElement | null>(null)
 
@@ -44,10 +46,10 @@ export function FileButtonInput({
         disabled={disabled}
         onClick={() => ref.current?.click()}
       >
-        {buttonText}
+        {buttonText ?? t('common.choosePhoto')}
       </button>
       <span className="file-name" title={selectedFileName ?? ''}>
-        {selectedFileName ?? 'Файл не выбран'}
+        {selectedFileName ?? t('common.fileNotSelected')}
       </span>
     </div>
   )

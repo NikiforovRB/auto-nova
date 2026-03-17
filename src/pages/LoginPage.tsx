@@ -4,8 +4,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
+import { useTranslation } from 'react-i18next'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -37,10 +39,10 @@ export function LoginPage() {
       <Header />
       <main className="auth-main">
         <section className="auth-card">
-          <h1 className="auth-title">Вход в AUTONOVA</h1>
+          <h1 className="auth-title">{t('auth.loginTitle')}</h1>
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span>Email</span>
+              <span>{t('auth.email')}</span>
               <input
                 type="email"
                 required
@@ -49,7 +51,7 @@ export function LoginPage() {
               />
             </label>
             <label className="auth-field">
-              <span>Пароль</span>
+              <span>{t('auth.password')}</span>
               <input
                 type="password"
                 required
@@ -59,10 +61,10 @@ export function LoginPage() {
             </label>
             {error && <div className="auth-error">{error}</div>}
             <button type="submit" className="primary-button" disabled={loading}>
-              {loading ? 'Входим…' : 'Войти'}
+              {loading ? t('auth.loggingIn') : t('auth.login')}
             </button>
             <div className="auth-alt">
-              Нет аккаунта? <Link to="/register">Создать</Link>
+              <Link to="/register">{t('auth.noAccount')}</Link>
             </div>
           </form>
         </section>

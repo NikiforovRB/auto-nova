@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export function Footer() {
+  const { t } = useTranslation()
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
-        <span>©2026, Autonova</span>
+        <span>{t('footer.copyright')}</span>
         <Link to="/privacy" className="footer-link">
-          Политика конфиденциальности
+          {t('footer.privacy')}
         </Link>
         <Link to="/personal-data" className="footer-link">
-          Политика обработки персональных данных
+          {t('footer.personalData')}
         </Link>
         <a
           href="https://ansara.ru/"
@@ -17,7 +19,7 @@ export function Footer() {
           target="_blank"
           rel="noreferrer"
         >
-          Сделано в студии ANSARA
+          {t('footer.madeBy')}
         </a>
       </div>
     </footer>

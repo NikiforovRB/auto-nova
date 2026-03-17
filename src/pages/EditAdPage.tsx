@@ -9,6 +9,7 @@ import type { Ad, Brand, Model, ModelGeneration, Region } from '../types'
 import { uploadImageToS3 } from '../s3Upload'
 import { FileButtonInput } from '../ui/FileButtonInput'
 import addIcon from '../assets/add.svg'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   PointerSensor,
@@ -30,6 +31,7 @@ type PhotoItem =
   | { id: string; kind: 'new'; file: File; previewUrl: string; rotation: number }
 
 export function EditAdPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const { id } = useParams()
@@ -53,6 +55,7 @@ export function EditAdPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
@@ -96,7 +99,7 @@ export function EditAdPage() {
         .maybeSingle()
 
       if (adError || !adData) {
-        setErrorMessage('Объявление не найдено или недоступно для редактирования.')
+        setErrorMessage(t('editAd.notFound'))
         setLoading(false)
         return
       }
@@ -263,12 +266,40 @@ export function EditAdPage() {
     navigate('/profile')
   }
 
+  const deleteAd = async () => {
+    if (!user || !Number.isFinite(adId)) return
+    setSaving(true)
+    setErrorMessage(null)
+    try {
+      await supabase.from('ad_photos').delete().eq('ad_id', adId)
+      const { data: deleted, error } = await supabase
+        .from('ads')
+        .delete()
+        .eq('id', adId)
+        .eq('user_id', user.id)
+        .select('id')
+
+      if (error) {
+        setErrorMessage(error.message)
+        return
+      }
+
+      if (!deleted || deleted.length === 0) {
+        setErrorMessage('Не удалось удалить объявление. Проверьте права доступа (RLS) в Supabase.')
+        return
+      }
+      navigate('/profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <MainLayout>
         <Header />
         <main className="profile-main">
-          <section className="profile-card create-ad-card">Загрузка…</section>
+          <section className="profile-card create-ad-card">{t('common.loading')}</section>
         </main>
       </MainLayout>
     )
@@ -290,11 +321,11 @@ export function EditAdPage() {
       <Header />
       <main className="profile-main">
         <section className="profile-card create-ad-card">
-          <h1 className="profile-title">Редактировать объявление</h1>
+          <h1 className="profile-title">{t('editAd.title')}</h1>
           <form className="profile-form create-ad-form" onSubmit={handleSubmit}>
             <div className="create-ad-grid">
               <label className="profile-field">
-                <span className="label">Марка</span>
+                <span className="label">{t('createAd.brand')}</span>
                 <select
                   value={brandId ?? ''}
                   onChange={(e) => {
@@ -305,7 +336,7 @@ export function EditAdPage() {
                   }}
                   required
                 >
-                  <option value="">Выберите марку</option>
+                  <option value="">{t('createAd.chooseBrand')}</option>
                   {brands.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}
@@ -315,7 +346,7 @@ export function EditAdPage() {
               </label>
 
               <label className="profile-field">
-                <span className="label">Модель</span>
+                <span className="label">{t('createAd.model')}</span>
                 <select
                   value={modelId ?? ''}
                   onChange={(e) => {
@@ -325,7 +356,7 @@ export function EditAdPage() {
                   }}
                   required
                 >
-                  <option value="">Выберите модель</option>
+                  <option value="">{t('createAd.chooseModel')}</option>
                   {filteredModels.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
@@ -335,13 +366,13 @@ export function EditAdPage() {
               </label>
 
               <label className="profile-field">
-                <span className="label">Год выпуска</span>
+                <span className="label">{t('createAd.year')}</span>
                 <input type="number" required value={year} onChange={(e) => setYear(e.target.value)} />
               </label>
 
               {modelId && filteredGenerations.length > 0 && (
                 <div className="profile-field create-ad-generation">
-                  <span className="label">Поколение</span>
+                  <span className="label">{t('createAd.generation')}</span>
                   <div className="generation-grid">
                     {filteredGenerations.map((g) => {
                       const active = generationId === g.id
@@ -370,7 +401,7 @@ export function EditAdPage() {
               )}
 
               <label className="profile-field">
-                <span className="label">Пробег, км</span>
+                <span className="label">{t('createAd.mileage')}</span>
                 <input
                   type="text"
                   required
@@ -381,7 +412,7 @@ export function EditAdPage() {
               </label>
 
               <label className="profile-field">
-                <span className="label">Цена, ₽</span>
+                <span className="label">{t('createAd.price')}</span>
                 <input
                   type="text"
                   required
@@ -392,9 +423,9 @@ export function EditAdPage() {
               </label>
 
               <label className="profile-field">
-                <span className="label">Регион</span>
+                <span className="label">{t('createAd.region')}</span>
                 <select value={regionId ?? ''} onChange={(e) => setRegionId(e.target.value ? Number(e.target.value) : null)}>
-                  <option value="">Не выбран</option>
+                  <option value="">{t('profilePage.regionNone')}</option>
                   {regions.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
@@ -404,13 +435,13 @@ export function EditAdPage() {
               </label>
 
               <label className="profile-field create-ad-desc">
-                <span className="label">Описание</span>
+                <span className="label">{t('createAd.description')}</span>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
               </label>
             </div>
 
             <div className="profile-field create-ad-photos-field">
-              <span className="label">Фотографии</span>
+              <span className="label">{t('createAd.photos')}</span>
               <FileButtonInput multiple accept="image/*" onFilesSelected={handlePhotosSelected} />
               {photos.length > 0 && (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onPhotosDragEnd}>
@@ -473,11 +504,42 @@ export function EditAdPage() {
 
             <button type="submit" className="primary-button create-ad-submit" disabled={saving}>
               <img src={addIcon} alt="" className="create-ad-submit-icon" aria-hidden="true" />
-              {saving ? 'Сохраняем…' : 'Сохранить изменения'}
+              {saving ? t('createAd.saving') : t('editAd.submit')}
+            </button>
+            <button type="button" className="danger-button" onClick={() => setDeleteOpen(true)} disabled={saving}>
+              {t('editAd.delete')}
             </button>
           </form>
         </section>
       </main>
+      {deleteOpen ? (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setDeleteOpen(false)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">{t('editAd.delete')}</h2>
+            <p className="modal-text">{t('editAd.confirmDelete')}</p>
+            <div className="modal-actions">
+              <button type="button" className="secondary-button" onClick={() => setDeleteOpen(false)} disabled={saving}>
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={async () => {
+                  await deleteAd()
+                }}
+                disabled={saving}
+              >
+                {t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </MainLayout>
   )
 }

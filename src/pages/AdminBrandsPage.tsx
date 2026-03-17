@@ -9,6 +9,7 @@ import { uploadImageToS3 } from '../s3Upload'
 import { useToast } from '../ui/toast/ToastContext'
 import { FileButtonInput } from '../ui/FileButtonInput'
 import { AdminTabs } from './admin/AdminTabs'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   KeyboardSensor,
@@ -28,6 +29,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 export function AdminBrandsPage() {
+  const { t } = useTranslation()
   const [brands, setBrands] = useState<Brand[]>([])
   const [models, setModels] = useState<Model[]>([])
   const [generations, setGenerations] = useState<ModelGeneration[]>([])
@@ -86,8 +88,8 @@ export function AdminBrandsPage() {
       if (!logoUrl) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось загрузить логотип',
-          message: 'Проверьте настройки S3 и функцию подписи.',
+          title: t('admin.logoUploadFailedTitle'),
+          message: t('admin.uploadCheckHint'),
         })
       }
     }
@@ -102,9 +104,9 @@ export function AdminBrandsPage() {
       setBrands((prev) => [...prev, data as Brand])
       setName('')
       setFile(null)
-      toast.push({ variant: 'success', title: 'Марка добавлена', message: (data as Brand).name })
+      toast.push({ variant: 'success', title: t('admin.brandAdded'), message: (data as Brand).name })
     } else if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка добавления марки', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.brandAddError'), message: error.message })
     }
   }
 
@@ -150,8 +152,8 @@ export function AdminBrandsPage() {
       if (!uploaded) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось загрузить логотип',
-          message: 'Попробуйте ещё раз.',
+          title: t('admin.logoUploadFailedTitle'),
+          message: t('admin.uploadCheckHint'),
         })
         return
       }
@@ -164,7 +166,7 @@ export function AdminBrandsPage() {
       .eq('id', brand.id)
 
     if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка сохранения', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
       return
     }
 
@@ -172,24 +174,24 @@ export function AdminBrandsPage() {
       prev.map((x) => (x.id === brand.id ? { ...x, name: nextName, logo_url: nextLogoUrl } : x)),
     )
     cancelEditBrand()
-    toast.push({ variant: 'success', title: 'Марка обновлена', message: nextName })
+    toast.push({ variant: 'success', title: t('admin.brandUpdated'), message: nextName })
   }
 
   const deleteBrand = async (brand: Brand) => {
-    if (!confirm(`Удалить марку "${brand.name}"? Также будут удалены её модели.`)) return
+    if (!confirm(t('admin.confirmDeleteBrand', { name: brand.name }))) return
     const { error: modelsError } = await supabase.from('models').delete().eq('brand_id', brand.id)
     if (modelsError) {
-      toast.push({ variant: 'error', title: 'Ошибка удаления моделей', message: modelsError.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: modelsError.message })
       return
     }
     const { error } = await supabase.from('brands').delete().eq('id', brand.id)
     if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка удаления марки', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
       return
     }
     setModels((prev) => prev.filter((m) => m.brand_id !== brand.id))
     setBrands((prev) => prev.filter((b) => b.id !== brand.id))
-    toast.push({ variant: 'success', title: 'Марка удалена', message: brand.name })
+    toast.push({ variant: 'success', title: t('admin.brandDeleted'), message: brand.name })
   }
 
   const persistBrandOrder = async (ordered: Brand[]) => {
@@ -202,7 +204,7 @@ export function AdminBrandsPage() {
       if (error) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось сохранить порядок',
+          title: t('admin.orderSaveFailed'),
           message: error.message,
         })
         break
@@ -239,7 +241,7 @@ export function AdminBrandsPage() {
     if (draft.file) {
       imageUrl = await uploadImageToS3(draft.file, 'models')
       if (!imageUrl) {
-        toast.push({ variant: 'error', title: 'Не удалось загрузить фото модели', message: 'Попробуйте ещё раз.' })
+        toast.push({ variant: 'error', title: t('admin.saveFailed'), message: t('admin.uploadCheckHint') })
         return
       }
     }
@@ -252,13 +254,13 @@ export function AdminBrandsPage() {
       .single()
 
     if (error || !data) {
-      toast.push({ variant: 'error', title: 'Ошибка добавления модели', message: error?.message ?? 'Unknown error' })
+      toast.push({ variant: 'error', title: t('admin.brandAddError'), message: error?.message ?? 'Unknown error' })
       return
     }
 
     setModels((prev) => [...prev, data as Model])
     setModelDraftByBrand((prev) => ({ ...prev, [brand.id]: { name: '', file: null } }))
-    toast.push({ variant: 'success', title: 'Модель добавлена', message: modelName })
+    toast.push({ variant: 'success', title: t('admin.modelAdded'), message: modelName })
   }
 
   const persistModelOrder = async (_brandId: number, orderedModels: Model[]) => {
@@ -271,7 +273,7 @@ export function AdminBrandsPage() {
       if (error) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось сохранить порядок моделей',
+          title: t('admin.orderSaveFailedModels'),
           message: error.message,
         })
         break
@@ -295,14 +297,14 @@ export function AdminBrandsPage() {
   }
 
   const deleteModel = async (m: Model) => {
-    if (!confirm(`Удалить модель "${m.name}"?`)) return
+    if (!confirm(t('admin.confirmDeleteModel', { name: m.name }))) return
     const { error } = await supabase.from('models').delete().eq('id', m.id)
     if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка удаления модели', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
       return
     }
     setModels((prev) => prev.filter((x) => x.id !== m.id))
-    toast.push({ variant: 'success', title: 'Модель удалена', message: m.name })
+    toast.push({ variant: 'success', title: t('admin.modelDeleted'), message: m.name })
   }
 
   const addGeneration = async (model: Model) => {
@@ -314,7 +316,7 @@ export function AdminBrandsPage() {
     if (draft.file) {
       imageUrl = await uploadImageToS3(draft.file, 'models')
       if (!imageUrl) {
-        toast.push({ variant: 'error', title: 'Не удалось загрузить фото поколения', message: 'Попробуйте ещё раз.' })
+        toast.push({ variant: 'error', title: t('admin.saveFailed'), message: t('admin.uploadCheckHint') })
         return
       }
     }
@@ -327,24 +329,24 @@ export function AdminBrandsPage() {
       .single()
 
     if (error || !data) {
-      toast.push({ variant: 'error', title: 'Ошибка добавления поколения', message: error?.message ?? 'Unknown error' })
+      toast.push({ variant: 'error', title: t('admin.brandAddError'), message: error?.message ?? 'Unknown error' })
       return
     }
 
     setGenerations((prev) => [...prev, data as ModelGeneration])
     setGenerationDraftByModel((prev) => ({ ...prev, [model.id]: { title: '', file: null } }))
-    toast.push({ variant: 'success', title: 'Поколение добавлено', message: title })
+    toast.push({ variant: 'success', title: t('admin.generationAdded'), message: title })
   }
 
   const deleteGeneration = async (g: ModelGeneration) => {
-    if (!confirm(`Удалить поколение "${g.title}"?`)) return
+    if (!confirm(t('admin.confirmDeleteGeneration', { name: g.title }))) return
     const { error } = await supabase.from('model_generations').delete().eq('id', g.id)
     if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка удаления поколения', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
       return
     }
     setGenerations((prev) => prev.filter((x) => x.id !== g.id))
-    toast.push({ variant: 'success', title: 'Поколение удалено', message: g.title })
+    toast.push({ variant: 'success', title: t('admin.generationDeleted'), message: g.title })
   }
 
   const persistGenerationOrder = async (_modelId: number, ordered: ModelGeneration[]) => {
@@ -357,7 +359,7 @@ export function AdminBrandsPage() {
       if (error) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось сохранить порядок поколений',
+          title: t('admin.orderSaveFailedGenerations'),
           message: error.message,
         })
         break
@@ -390,7 +392,7 @@ export function AdminBrandsPage() {
     return (
       <li ref={setNodeRef} style={style} className="admin-edit-row">
         <div className="admin-edit-row-body">{children}</div>
-        <button type="button" className="drag-handle" {...attributes} {...listeners} aria-label="Перетащить">
+        <button type="button" className="drag-handle" {...attributes} {...listeners} aria-label={t('admin.dragAria')}>
           ⋮⋮
         </button>
       </li>
@@ -404,11 +406,11 @@ export function AdminBrandsPage() {
         <main className="admin-main">
           <section className="admin-card">
             <AdminTabs />
-            <h1 className="admin-title">Марки автомобилей</h1>
+            <h1 className="admin-title">{t('admin.brandsTitle')}</h1>
             <form className="admin-inline-form" onSubmit={handleSubmit}>
               <input
                 type="text"
-                placeholder="Новая марка"
+                placeholder={t('admin.newBrandPlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -418,11 +420,11 @@ export function AdminBrandsPage() {
                 selectedFileName={file?.name ?? null}
               />
               <button type="submit" className="primary-button" disabled={saving}>
-                Добавить
+                {t('admin.add')}
               </button>
             </form>
             {loading ? (
-              <p>Загрузка…</p>
+              <p>{t('common.loading')}</p>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onBrandDragEnd}>
                 <SortableContext items={brands.map((b) => b.id)} strategy={verticalListSortingStrategy}>
@@ -451,14 +453,14 @@ export function AdminBrandsPage() {
                                     accept="image/*"
                                     onFileSelected={setEditingLogoFile}
                                     selectedFileName={editingLogoFile?.name ?? null}
-                                    buttonText="Выбрать логотип"
+                                    buttonText={t('admin.chooseLogo')}
                                   />
                                   <div className="admin-actions">
                                     <button type="button" className="link-button" onClick={() => void saveEditBrand(b)}>
-                                      Сохранить
+                                      {t('common.save')}
                                     </button>
                                     <button type="button" className="link-button" onClick={cancelEditBrand}>
-                                      Отмена
+                                      {t('common.cancel')}
                                     </button>
                                   </div>
                                 </div>
@@ -467,13 +469,13 @@ export function AdminBrandsPage() {
                                   <div className="admin-brand-name">{b.name}</div>
                                   <div className="admin-actions">
                                     <button type="button" className="link-button" onClick={() => startEditBrand(b)}>
-                                      Редактировать
+                                      {t('common.edit')}
                                     </button>
                                     <button type="button" className="link-button" onClick={() => deleteBrand(b)}>
-                                      Удалить
+                                      {t('common.delete')}
                                     </button>
                                     <button type="button" className="link-button" onClick={() => toggleExpand(b.id)}>
-                                      {expanded ? 'Скрыть модели' : `Модели (${brandModels.length})`}
+                                      {expanded ? t('admin.modelsToggleHide') : t('admin.modelsToggle', { count: brandModels.length })}
                                     </button>
                                   </div>
                                 </div>
@@ -485,7 +487,7 @@ export function AdminBrandsPage() {
                                 <div className="admin-models-add">
                                   <input
                                     type="text"
-                                    placeholder="Новая модель"
+                                    placeholder={t('admin.newModelPlaceholder')}
                                     value={draft.name}
                                     onChange={(e) =>
                                       setModelDraftByBrand((prev) => ({
@@ -505,7 +507,7 @@ export function AdminBrandsPage() {
                                     selectedFileName={draft.file?.name ?? null}
                                   />
                                   <button type="button" className="primary-button" onClick={() => void addModel(b)}>
-                                    Добавить модель
+                                    {t('admin.addModel')}
                                   </button>
                                 </div>
 
@@ -521,10 +523,12 @@ export function AdminBrandsPage() {
                                             <div className="admin-model-name">{m.name}</div>
                                             <div className="admin-actions">
                                               <button type="button" className="link-button" onClick={() => toggleModelExpand(m.id)}>
-                                                {expandedModelIds[m.id] ? 'Скрыть поколения' : `Поколения (${(generationsByModel.get(m.id) ?? []).length})`}
+                                                {expandedModelIds[m.id]
+                                                  ? t('admin.generationsToggleHide')
+                                                  : t('admin.generationsToggle', { count: (generationsByModel.get(m.id) ?? []).length })}
                                               </button>
                                               <button type="button" className="link-button" onClick={() => deleteModel(m)}>
-                                                Удалить
+                                                {t('common.delete')}
                                               </button>
                                             </div>
                                           </div>
@@ -538,7 +542,7 @@ export function AdminBrandsPage() {
                                                     <>
                                                       <input
                                                         type="text"
-                                                        placeholder="Название поколения"
+                                                        placeholder={t('admin.generationTitlePlaceholder')}
                                                         value={gd.title}
                                                         onChange={(e) =>
                                                           setGenerationDraftByModel((prev) => ({
@@ -556,14 +560,14 @@ export function AdminBrandsPage() {
                                                           }))
                                                         }
                                                         selectedFileName={gd.file?.name ?? null}
-                                                        buttonText="Выбрать фото"
+                                                        buttonText={t('admin.choosePhoto')}
                                                       />
                                                       <button
                                                         type="button"
                                                         className="primary-button"
                                                         onClick={() => void addGeneration(m)}
                                                       >
-                                                        Добавить поколение
+                                                        {t('admin.addGeneration')}
                                                       </button>
                                                     </>
                                                   )
@@ -597,7 +601,7 @@ export function AdminBrandsPage() {
                                                               className="link-button"
                                                               onClick={() => void deleteGeneration(g)}
                                                             >
-                                                              Удалить
+                                                              {t('common.delete')}
                                                             </button>
                                                           </div>
                                                         </div>

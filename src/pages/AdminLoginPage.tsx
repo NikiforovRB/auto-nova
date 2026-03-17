@@ -5,8 +5,10 @@ import { supabase } from '../supabaseClient'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
 import { useToast } from '../ui/toast/ToastContext'
+import { useTranslation } from 'react-i18next'
 
 export function AdminLoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +33,7 @@ export function AdminLoginPage() {
       setError(signInError.message)
       toast.push({
         variant: 'error',
-        title: 'Не удалось войти',
+        title: t('admin.authFailed'),
         message: signInError.message,
       })
       return
@@ -41,8 +43,8 @@ export function AdminLoginPage() {
     if (!userId) {
       toast.push({
         variant: 'error',
-        title: 'Ошибка авторизации',
-        message: 'Не удалось получить пользователя из сессии.',
+        title: t('admin.authError'),
+        message: t('admin.noUserInSession'),
       })
       return
     }
@@ -56,7 +58,7 @@ export function AdminLoginPage() {
     if (profileError) {
       toast.push({
         variant: 'error',
-        title: 'Ошибка проверки прав',
+        title: t('admin.rightsCheckError'),
         message: profileError.message,
       })
       return
@@ -65,8 +67,8 @@ export function AdminLoginPage() {
     if (!profileData?.is_admin) {
       toast.push({
         variant: 'error',
-        title: 'Доступ запрещён',
-        message: 'У этого аккаунта нет прав администратора.',
+        title: t('admin.accessDenied'),
+        message: t('admin.noAdminRights'),
       })
       await supabase.auth.signOut()
       return
@@ -74,8 +76,8 @@ export function AdminLoginPage() {
 
     toast.push({
       variant: 'success',
-      title: 'Вы вошли в админку',
-      message: 'Добро пожаловать.',
+      title: t('admin.adminWelcomeTitle'),
+      message: t('admin.adminWelcomeMsg'),
     })
     navigate('/admin/brands')
   }
@@ -85,11 +87,11 @@ export function AdminLoginPage() {
       <Header />
       <main className="auth-main">
         <section className="auth-card">
-          <h1 className="auth-title">Админка AUTONOVA</h1>
-          <p className="auth-subtitle">Только для администраторов</p>
+          <h1 className="auth-title">{t('admin.loginTitle')}</h1>
+          <p className="auth-subtitle">{t('admin.loginSubtitle')}</p>
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span>Email</span>
+              <span>{t('auth.email')}</span>
               <input
                 type="email"
                 required
@@ -98,7 +100,7 @@ export function AdminLoginPage() {
               />
             </label>
             <label className="auth-field">
-              <span>Пароль</span>
+              <span>{t('auth.password')}</span>
               <input
                 type="password"
                 required
@@ -108,7 +110,7 @@ export function AdminLoginPage() {
             </label>
             {error && <div className="auth-error">{error}</div>}
             <button type="submit" className="primary-button" disabled={loading}>
-              {loading ? 'Входим…' : 'Войти в админку'}
+              {loading ? t('auth.loggingIn') : t('admin.loginButton')}
             </button>
           </form>
         </section>

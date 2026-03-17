@@ -6,8 +6,10 @@ import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../supabaseClient'
 import type { Ad } from '../types'
 import { AdCard } from '../components/AdCard'
+import { useTranslation } from 'react-i18next'
 
 export function MyAdsPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [ads, setAds] = useState<Ad[]>([])
@@ -33,12 +35,12 @@ export function MyAdsPage() {
       <Header />
       <main className="profile-main">
         <section className="profile-card">
-          <h1 className="profile-title">Мои объявления</h1>
+          <h1 className="profile-title">{t('myAdsPage.title')}</h1>
 
           {!user ? (
-            <div>Необходимо войти в аккаунт.</div>
+            <div>{t('common.requiredLogin')}</div>
           ) : loading ? (
-            <div>Загрузка…</div>
+            <div>{t('common.loading')}</div>
           ) : ads.length ? (
             <div className="my-ads-grid">
               {ads.map((ad) => (
@@ -49,16 +51,16 @@ export function MyAdsPage() {
                     className="my-ad-edit"
                     onClick={() => navigate(`/ads/${ad.id}/edit`)}
                   >
-                    Редактировать
+                    {t('myAdsPage.edit')}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
             <div>
-              <p>У вас пока нет объявлений.</p>
+              <p>{t('profilePage.myAdsEmpty')}</p>
               <button type="button" className="primary-button" onClick={() => navigate('/ads/new')}>
-                Разместить объявление
+                {t('profilePage.createAd')}
               </button>
             </div>
           )}

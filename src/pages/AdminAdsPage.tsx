@@ -4,8 +4,10 @@ import { Header } from '../shared/Header'
 import { supabase } from '../supabaseClient'
 import type { Ad } from '../types'
 import { AdminGuard } from '../auth/AdminGuard'
+import { useTranslation } from 'react-i18next'
 
 export function AdminAdsPage() {
+  const { t } = useTranslation()
   const [ads, setAds] = useState<Ad[]>([])
 
   useEffect(() => {
@@ -30,13 +32,13 @@ export function AdminAdsPage() {
         <Header />
         <main className="admin-main">
           <section className="admin-card">
-            <h1 className="admin-title">Объявления</h1>
+            <h1 className="admin-title">{t('admin.adsTitle')}</h1>
             <table className="admin-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Марка/модель</th>
-                  <th>Статус</th>
+                  <th>{t('admin.brandModel')}</th>
+                  <th>{t('admin.status')}</th>
                   <th />
                 </tr>
               </thead>
@@ -54,14 +56,14 @@ export function AdminAdsPage() {
                         className="link-button"
                         onClick={() => updateStatus(ad.id, 'active')}
                       >
-                        Опубликовать
+                        {t('admin.publish')}
                       </button>
                       <button
                         type="button"
                         className="link-button"
                         onClick={() => updateStatus(ad.id, 'hidden')}
                       >
-                        Скрыть
+                        {t('admin.hide')}
                       </button>
                     </td>
                   </tr>

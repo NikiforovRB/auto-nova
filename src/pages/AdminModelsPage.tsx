@@ -8,8 +8,10 @@ import { AdminGuard } from '../auth/AdminGuard'
 import { uploadImageToS3 } from '../s3Upload'
 import { useToast } from '../ui/toast/ToastContext'
 import { FileButtonInput } from '../ui/FileButtonInput'
+import { useTranslation } from 'react-i18next'
 
 export function AdminModelsPage() {
+  const { t } = useTranslation()
   const [brands, setBrands] = useState<Brand[]>([])
   const [models, setModels] = useState<Model[]>([])
   const [brandId, setBrandId] = useState<number | null>(null)
@@ -43,8 +45,8 @@ export function AdminModelsPage() {
       if (!imageUrl) {
         toast.push({
           variant: 'error',
-          title: 'Не удалось загрузить фото модели',
-          message: 'Проверьте настройки S3 и функцию подписи.',
+          title: t('admin.saveFailed'),
+          message: t('admin.uploadCheckHint'),
         })
       }
     }
@@ -58,9 +60,9 @@ export function AdminModelsPage() {
       setModels((prev) => [...prev, data as Model].sort((a, b) => a.name.localeCompare(b.name)))
       setName('')
       setFile(null)
-      toast.push({ variant: 'success', title: 'Модель добавлена', message: (data as Model).name })
+      toast.push({ variant: 'success', title: t('admin.modelAdded'), message: (data as Model).name })
     } else if (error) {
-      toast.push({ variant: 'error', title: 'Ошибка добавления модели', message: error.message })
+      toast.push({ variant: 'error', title: t('admin.saveFailed'), message: error.message })
     }
   }
 
@@ -72,7 +74,7 @@ export function AdminModelsPage() {
         <Header />
         <main className="admin-main">
           <section className="admin-card">
-            <h1 className="admin-title">Модели автомобилей</h1>
+            <h1 className="admin-title">{t('admin.modelsTitle')}</h1>
             <form className="admin-inline-form" onSubmit={handleSubmit}>
               <select
                 value={brandId ?? ''}
@@ -86,7 +88,7 @@ export function AdminModelsPage() {
               </select>
               <input
                 type="text"
-                placeholder="Новая модель"
+                placeholder={t('admin.newModelPlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -96,7 +98,7 @@ export function AdminModelsPage() {
                 selectedFileName={file?.name ?? null}
               />
               <button type="submit" className="primary-button">
-                Добавить
+                {t('admin.add')}
               </button>
             </form>
             <ul className="admin-list">

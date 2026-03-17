@@ -6,8 +6,10 @@ import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../supabaseClient'
 import type { Ad } from '../types'
 import { AdCard } from '../components/AdCard'
+import { useTranslation } from 'react-i18next'
 
 export function FavoritesPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { favoriteIds } = useFavorites()
   const [ads, setAds] = useState<Ad[]>([])
@@ -57,10 +59,10 @@ export function FavoritesPage() {
       <main className="home-main">
         <section className="ads-section">
           <div className="section-header">
-            <h2 className="section-title">Избранное</h2>
+            <h2 className="section-title">{t('favoritesPage.title')}</h2>
           </div>
           {!user ? (
-            <div className="ads-empty">Войдите, чтобы видеть избранное.</div>
+            <div className="ads-empty">{t('favoritesPage.needLogin')}</div>
           ) : loading ? (
             <div className="ads-grid">
               <div className="ad-card-skeleton" />
@@ -75,7 +77,7 @@ export function FavoritesPage() {
               ))}
             </div>
           ) : (
-            <div className="ads-empty">В избранном пока нет объявлений.</div>
+            <div className="ads-empty">{t('favoritesPage.empty')}</div>
           )}
         </section>
       </main>
