@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import 'dayjs/locale/ru'
 import { MainLayout } from '../shared/MainLayout'
 import { Header } from '../shared/Header'
 import { supabase } from '../supabaseClient'
@@ -10,6 +11,7 @@ import type { Ad } from '../types'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
+dayjs.locale('ru')
 
 export function AdDetailsPage() {
   const { id } = useParams()
@@ -46,6 +48,7 @@ export function AdDetailsPage() {
           *,
           brand:brands(*),
           model:models(*),
+          region:regions(name),
           profile:profiles(phone)
         `,
         )
@@ -64,7 +67,8 @@ export function AdDetailsPage() {
             `
             *,
             brand:brands(*),
-            model:models(*)
+            model:models(*),
+            region:regions(name)
           `,
           )
           .eq('id', adId)
@@ -144,7 +148,7 @@ export function AdDetailsPage() {
   const createdAtMoscow = useMemo(
     () =>
       ad
-        ? dayjs.utc(ad.created_at).tz('Europe/Moscow').format('D MMMM YYYY, HH:mm')
+        ? dayjs.utc(ad.created_at).tz('Europe/Moscow').format('D MMMM YYYY')
         : '',
     [ad],
   )
@@ -249,6 +253,7 @@ export function AdDetailsPage() {
               {ad.brand?.name} {ad.model?.name}
             </h1>
             <div className="ad-details-price">{formattedPrice}</div>
+            {ad.region?.name ? <div className="ad-details-region">{ad.region.name}</div> : null}
             <div className="ad-details-meta">
               <span>
                 {ad.year} • {formattedMileage} км
@@ -276,7 +281,7 @@ export function AdDetailsPage() {
             <div className="ad-details-description">{ad.description}</div>
           ) : null}
           <div className="ad-details-created">
-            Объявление размещено: {createdAtMoscow} (МСК)
+            Объявление размещено: {createdAtMoscow}
           </div>
         </section>
 

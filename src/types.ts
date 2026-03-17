@@ -47,6 +47,9 @@ export interface Ad {
   brand?: Brand
   model?: Model
   photos?: AdPhoto[]
+  region?: {
+    name: string | null
+  }
   profile?: {
     phone: string | null
   }

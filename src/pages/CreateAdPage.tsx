@@ -251,8 +251,18 @@ export function CreateAdPage() {
               </select>
             </label>
 
+              <label className="profile-field">
+              <span className="label">Год выпуска</span>
+              <input
+                type="number"
+                required
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+              />
+            </label>
+
               {modelId && filteredGenerations.length > 0 && (
-                <div className="profile-field">
+                <div className="profile-field create-ad-generation">
                   <span className="label">Поколение</span>
                   <div className="generation-grid">
                     {filteredGenerations.map((g) => {
@@ -284,16 +294,6 @@ export function CreateAdPage() {
                   </div>
                 </div>
               )}
-
-              <label className="profile-field">
-              <span className="label">Год выпуска</span>
-              <input
-                type="number"
-                required
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-              />
-            </label>
 
               <label className="profile-field">
               <span className="label">Пробег, км</span>
