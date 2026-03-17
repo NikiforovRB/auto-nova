@@ -281,7 +281,7 @@ export function ProfilePage() {
           {ads.length > 10 ? (
             <button
               type="button"
-              className="primary-button"
+              className="secondary-button profile-show-all"
               style={{ marginTop: 12 }}
               onClick={() => navigate('/profile/ads')}
             >

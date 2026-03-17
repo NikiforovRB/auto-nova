@@ -927,6 +927,21 @@ body {
   cursor: default;
 }
 
+.profile-show-all {
+  width: auto;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-color: #e5e5e5;
+  background: #ffffff;
+  color: #aaaaaa;
+}
+
+.profile-show-all:hover:not(:disabled) {
+  border-color: #0c78ed;
+  color: #0c78ed;
+  background: #ffffff;
+}
+
 .create-ad-photo-delete {
   color: #b91c1c;
   border-color: #f97373;
