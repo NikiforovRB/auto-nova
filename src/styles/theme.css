@@ -157,6 +157,13 @@ body {
   margin-right: 12px;
 }
 
+.lang-switch:focus,
+.lang-switch:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-color: var(--border-subtle);
+}
+
 .create-ad-link {
   display: inline-flex;
   align-items: center;
@@ -2039,6 +2046,11 @@ body {
   }
 
   .top-bar-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .top-bar-right .create-ad-link {
     display: none;
   }
 
